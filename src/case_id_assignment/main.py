@@ -1,6 +1,6 @@
 import os.path
 
-import case_id_assignment.feature_engineering as engineer
+import case_id_assignment.feature_engineering as features_eng
 import case_id_assignment.feature_selection as selector
 import case_id_assignment.clustering as clustering
 import case_id_assignment.utilities as util
@@ -21,10 +21,10 @@ if __name__ == '__main__':
     # Preprocess data, generate features
     # todo work on the feature engineering module
     print('Process isolated data set - SQL queries features')
-    isolated_df_processed = engineer.generate_features(data_set=isolated_data_set)
+    isolated_df_processed = features_eng.generate_features(data_set=isolated_data_set)
     util.save_data_set(data_set=isolated_df_processed, data_folder=data_folder, name='isolated_df_processed')
     print('Process interleaved data set - SQL queries features')
-    interleaved_df_processed = engineer.generate_features(data_set=interleaved_data_set)
+    interleaved_df_processed = features_eng.generate_features(data_set=interleaved_data_set)
     util.save_data_set(data_set=isolated_df_processed, data_folder=data_folder, name='interleaved_df_processed')
 
     # Selecting features based on correlation

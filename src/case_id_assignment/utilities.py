@@ -1,4 +1,4 @@
-"""This module contains utilities function which serve all other modules
+"""This module contains utility functions which serve other modules
 """
 import operator
 import os.path
@@ -17,6 +17,16 @@ def load_data_set(file_path: str) -> pd.DataFrame:
     return pd.read_csv(file_path)
 
 
-def save_data_set(data_set, data_folder, name):
-    full_path = os.path.join(data_folder, name, '.csv')
+def save_data_set(data_set: pd.DataFrame, data_folder: str, name: str) -> None:
+    """Saves a given dataframe as a CSV file
+
+    :param data_set: dataframe to save
+    :param data_folder: name of the folder to save the file in
+    :param name: name of the file, if the name does not contain the extension .csv, it is added to the name
+    :return: None
+    """
+    extension = '' if '.csv' in name else '.csv'
+    name = f'{name}{extension}'
+    full_path = os.path.join(data_folder, name)
+    print(f'saving file into path :{full_path}')
     data_set.to_csv(full_path)
