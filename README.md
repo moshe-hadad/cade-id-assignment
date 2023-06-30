@@ -11,7 +11,9 @@ The method steps are:
 1) Identify case id attributes on the training data
 2) Collect and cluster attributes values from the network data (interleaved data) and addign each group with a number 
 as a case id
-3) Assign a case id number to packets containing the suitable values from the group 
+3) Assign a case id number to packets containing the suitable values from the group
+
+The network traffic data set are taken from this repo : https://github.com/HaifaUniversityBPM/traffic-data-to-event-log 
 
 
 
