@@ -16,6 +16,10 @@ def _feature_engineering_test_message(actual_columns: set, expected_columns: set
 
 
 def test_generate_features():
+    """ Given a dataframe containing a column with an SQL query named query
+        WHEN running the generate features function
+        THEN a new dataframe with new columns from the query parameter will be generated
+    """
     data_folder = '../data_for_tests'
     data_sample_path = os.path.join(data_folder, 'data_sample.csv')
     data_set_sample = util.load_data_set(file_path=data_sample_path)
@@ -30,8 +34,5 @@ def test_generate_features():
                         'partner_shipping_id', 'picking_policy', 'pricelist_id', 'require_payment', 'require_signature',
                         'state', 'team_id', 'user_id', 'validity_date', 'warehouse_id', 'res_model',
                         'mail_followers_id', 'mail_message_subtype_id', 'currency_rate'}
-    # , 'currency_rate'
     test_message = _feature_engineering_test_message(actual_columns, expected_columns)
     assert actual_columns == expected_columns, test_message
-    # util.save_data_set(data_set_sample_processed, data_folder=data_folder, name='generate_features_results')
-    # print(data_set_sample_processed.describe())
