@@ -26,25 +26,25 @@ def get_index(data_set, item):
 
 def generate_features_from_sql(data_set: pd.DataFrame):
     """Converts the column query from the given dataframe, which containing an SQL query, into additional columns
-        The column query contains an SQL query in a string format.
-        A key value pair from the SQL query is converted to a column value pair.
-        Rows which does not contain an SQL query or the SQL query does not contain a value for the key, will be assigned
-        an empty value.
+    The column query contains an SQL query in a string format.
+    A key value pair from the SQL query is converted to a column value pair.
+    Rows which does not contain an SQL query or the SQL query does not contain a value for the key, will be assigned
+    an empty value.
 
-        For a data frame of this form :
-                    id  | frame.number  | protocol  | query
-                    1   | 1325          | HTTP      | NONE
-                    2   | 8562          | PGSQL     | INSERT INTO "res_users_log" ("create_uid", "write_uid") VALUES
-                                                                                  (2, 2) RETURNING id
-                    3   | 2345          | HTTP      |
-                    4   | 3654          | PGSQL     | UPDATE "sale_order" SET "currency_rate"='1.000000',"write_uid"=1,
-                                                      WHERE id IN (94)
-        The result is a sparse matrix (for brevity, the column query was omitted)
-                    id  | frame.number  | protocol  | create_uid    | write_uid     | id    | currency_rate
-                    1   | 1325          | HTTP      | NONE          | NONE          | NONE  | NONE
-                    2   | 8562          | PGSQL     | 2             | 2             | NONE  | NONE
-                    3   | 2345          | HTTP      | NONE          | NONE          | NONE  | NONE
-                    4   | 3654          | PGSQL     | NONE          | 1             | 94    |'1.000000'
+    For a data frame of this form :
+                id  | frame.number  | protocol  | query
+                1   | 1325          | HTTP      | NONE
+                2   | 8562          | PGSQL     | INSERT INTO "res_users_log" ("create_uid", "write_uid") VALUES
+                                                                              (2, 2) RETURNING id
+                3   | 2345          | HTTP      |
+                4   | 3654          | PGSQL     | UPDATE "sale_order" SET "currency_rate"='1.000000',"write_uid"=1,
+                                                  WHERE id IN (94)
+    The result is a sparse matrix (for brevity, the column query was omitted)
+                id  | frame.number  | protocol  | create_uid    | write_uid     | id    | currency_rate
+                1   | 1325          | HTTP      | NONE          | NONE          | NONE  | NONE
+                2   | 8562          | PGSQL     | 2             | 2             | NONE  | NONE
+                3   | 2345          | HTTP      | NONE          | NONE          | NONE  | NONE
+                4   | 3654          | PGSQL     | NONE          | 1             | 94    |'1.000000'
 
 
         :param data_set:  a dataframe which contains a column named query
