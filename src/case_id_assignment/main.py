@@ -8,10 +8,9 @@ import case_id_assignment.imputing as imputer
 import case_id_assignment.assignment as case_id_assigner
 import case_id_assignment.evaluation as evaluation
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    # Generate features
     data_folder = '../../data'
+
     isolated_file_path = os.path.join(data_folder, 'ptp_isolated_data.csv')
     interleaved_file_path = os.path.join(data_folder, 'ptp_interleaved_data.csv')
 
@@ -22,17 +21,21 @@ if __name__ == '__main__':
     # todo work on the feature engineering module
     print('Process isolated data set - parse SQL queries to features')
     isolated_df_processed = features_eng.generate_features_from_sql(data_set=isolated_data_set)
-    util.save_data_set(data_set=isolated_df_processed, data_folder=data_folder, name='isolated_df_processed')
+    # util.save_data_set(data_set=isolated_df_processed, data_folder=data_folder, name='isolated_df_processed')
     print('Process interleaved data set - parse SQL queries to features')
     interleaved_df_processed = features_eng.generate_features_from_sql(data_set=interleaved_data_set)
-    util.save_data_set(data_set=isolated_df_processed, data_folder=data_folder, name='interleaved_df_processed')
+    # util.save_data_set(data_set=isolated_df_processed, data_folder=data_folder, name='interleaved_df_processed')
 
+    processed_data_folder = '../../processed_data'
     print('Process isolated data set - HTTP attributes to features')
     isolated_df_processed = features_eng.generate_features_from_http(data_set=isolated_df_processed)
-    util.save_data_set(data_set=isolated_df_processed, data_folder=data_folder, name='isolated_df_processed')
+    util.save_data_set(data_set=isolated_df_processed, data_folder=processed_data_folder, name='isolated_df_processed')
     print('Process interleaved data set - HTTP attributes to features')
     interleaved_df_processed = features_eng.generate_features_from_http(data_set=interleaved_df_processed)
-    util.save_data_set(data_set=isolated_df_processed, data_folder=data_folder, name='interleaved_df_processed')
+    util.save_data_set(data_set=isolated_df_processed, data_folder=processed_data_folder, name='interleaved_df_processed')
+
+    # impute features values from MessageAttributes
+    isolated_df_imputed = imputer.impute_from_message_attributes(data_set=isolated_df_processed)
 
     # Selecting features based on correlation
     # todo work on the correlation feature selection

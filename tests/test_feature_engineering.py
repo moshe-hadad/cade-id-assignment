@@ -2,6 +2,7 @@
 import os
 import case_id_assignment.utilities as util
 import case_id_assignment.feature_engineering as features_eng
+from . import testutils as tu
 
 
 def _feature_engineering_test_message(actual_columns: set, expected_columns: set) -> str:
@@ -20,7 +21,7 @@ def generate_features_from_sql():
         WHEN running the generate features function
         THEN a new dataframe with new columns from the query parameter will be generated
     """
-    data_set_sample = load_sample_data()
+    data_set_sample = tu.load_sample_data()
     data_set_sample_processed = features_eng.generate_features_from_sql(data_set=data_set_sample)
     actual_columns = set(data_set_sample_processed.columns)
     expected_columns = {'FileName', 'BusinessActivity', 'InstanceNumber', 'sniff_time', 'frame.number',
@@ -36,15 +37,8 @@ def generate_features_from_sql():
     assert actual_columns == expected_columns, test_message
 
 
-def load_sample_data():
-    data_folder = '../data_for_tests'
-    data_sample_path = os.path.join(data_folder, 'data_sample.csv')
-    data_set_sample = util.load_data_set(file_path=data_sample_path)
-    return data_set_sample
-
-
 def test_generate_features_from_http():
-    data_set_sample = load_sample_data()
+    data_set_sample = tu.load_sample_data()
     data_set_sample_processed = features_eng.generate_features_from_http(data_set=data_set_sample)
     actual_columns = set(data_set_sample_processed.columns)
     expected_columns = {'FileName', 'BusinessActivity', 'InstanceNumber', 'sniff_time', 'frame.number',
@@ -55,3 +49,6 @@ def test_generate_features_from_http():
                         'file_data', }
     test_message = _feature_engineering_test_message(actual_columns, expected_columns)
     assert actual_columns == expected_columns, test_message
+
+
+

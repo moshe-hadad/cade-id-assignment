@@ -30,3 +30,16 @@ def save_data_set(data_set: pd.DataFrame, data_folder: str, name: str) -> None:
     full_path = os.path.join(data_folder, name)
     print(f'saving file into path :{full_path}')
     data_set.to_csv(full_path)
+
+
+def case_id_mapping():
+    return {399: '{0}',
+            400: '{1}',
+            401: '{2}',
+            402: '{3}',
+            403: '{4}',
+            404: '{5}',
+            405: '{6}',
+            406: '{7}',
+            407: '{8}',
+            408: '{9}'}
