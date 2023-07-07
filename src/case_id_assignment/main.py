@@ -32,7 +32,8 @@ if __name__ == '__main__':
     util.save_data_set(data_set=isolated_df_processed, data_folder=processed_data_folder, name='isolated_df_processed')
     print('Process interleaved data set - HTTP attributes to features')
     interleaved_df_processed = features_eng.generate_features_from_http(data_set=interleaved_df_processed)
-    util.save_data_set(data_set=isolated_df_processed, data_folder=processed_data_folder, name='interleaved_df_processed')
+    util.save_data_set(data_set=isolated_df_processed, data_folder=processed_data_folder,
+                       name='interleaved_df_processed')
 
     # impute features values from MessageAttributes
     isolated_df_imputed = imputer.impute_from_message_attributes(data_set=isolated_df_processed)

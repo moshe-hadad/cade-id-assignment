@@ -38,3 +38,8 @@ def parse_method_and_file_data(row):
     method = parse_file_data_from_xml(xml)
     method = method if method else []
     return util.first_item(method), starting_frame_number, method
+
+def parse_message_attributes(row):
+    session_class = row['session_class']
+    if session_class != 'http':
+        return '', None, []
