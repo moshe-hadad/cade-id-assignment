@@ -18,6 +18,15 @@ def _input_sample_data():
     return results
 
 
+def _impute_from_table_data():
+    sample_data = tu.load_sample_data(file_name='sample_for_imputing.csv')
+    pipeline = Pipeline(steps=[
+        ('inputter', imp.ImputeFromTable())
+    ])
+    results = pipeline.fit_transform(sample_data)
+    return results
+
+
 def test_impute_sale_order_create():
     results = _input_sample_data()
     data = {'partner_id': 1, 'partner_invoice_id': 1, 'partner_shipping_id': 1}
@@ -54,6 +63,29 @@ def test_impute_account_invoice_create():
     assert_frame_equal(actual, expected)
 
 
+def test_impute_purchase_requisition_create():
+    results = _input_sample_data()
+    data = {'name': ['Cabinet with Doors_110', 'Acoustic Bloc Screens_102'], 'type_id': [2., 2.]}
+    indices = [167, 170]
+
+    actual = results.loc[indices, list(data.keys())]
+    expected = pd.DataFrame(data, index=indices)
+
+    assert_frame_equal(actual, expected)
+
+
+def test_impute_purchase_requisition_line_create():
+    results = _input_sample_data()
+    data = {'requisition_id': [100., 101.], 'product_id': [6., 17.], 'product_qty': [1., 3.],
+            'price_unit': [3., 4.]}
+    indices = [168, 169]
+
+    actual = results.loc[indices, list(data.keys())]
+    expected = pd.DataFrame(data, index=indices)
+
+    assert_frame_equal(actual, expected)
+
+
 def test_impute_account_invoice_line_create():
     results = _input_sample_data()
     data = {'invoice_id': [38., 39.], 'name': ['Conference Chair', 'Office Chair'],
@@ -77,3 +109,37 @@ def test_impute_account_payment_create():
 
     assert_frame_equal(actual, expected)
 
+
+def test_impute_purchase_order_button_confirm():
+    results = _input_sample_data()
+    data = {'res_id': [152., 156.], 'record_name': ['PO00152', 'PO00156'],
+            'datas_fname': ['PO_PO00152.pdf', 'PO_PO00156.pdf'],
+            'res_name': ['PO00152', 'PO00156'], 'origin': ['PO00152', 'PO00156'], 'purchase_order_id': [152., 156.]}
+    indices = [177, 178]
+
+    actual = results.loc[indices, list(data.keys())]
+    expected = pd.DataFrame(data, index=indices)
+
+    assert_frame_equal(actual, expected)
+
+
+def test_impute_purchase_order_create():
+    results = _input_sample_data()
+    data = {'partner_id': [1219., 1219.], 'requisition_id': [101., 103.]}
+    indices = [172, 173]
+
+    actual = results.loc[indices, list(data.keys())]
+    expected = pd.DataFrame(data, index=indices)
+
+    assert_frame_equal(actual, expected)
+
+
+def test_impute_from_table():
+    results = _impute_from_table_data()
+    data = {'sale_order_id': [94., 94., 94., 94.]}
+    indices = [11, 12, 13, 14]
+
+    actual = results.loc[indices, list(data.keys())]
+    expected = pd.DataFrame(data, index=indices)
+
+    assert_frame_equal(actual, expected)
