@@ -4,6 +4,7 @@ other columns.
 from pprint import pprint
 
 import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
 def _filter_features(correlation, threshold):

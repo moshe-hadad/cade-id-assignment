@@ -4,6 +4,7 @@ numerical values, converting and scaling columns
 """
 
 import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
 from tqdm.auto import tqdm
 from functools import reduce
 
@@ -24,7 +25,7 @@ def get_index(data_set, item):
     return index
 
 
-def generate_features_from_sql(data_set: pd.DataFrame):
+def generate_features_from_sql(data_set: pd.DataFrame, columns):
     """Converts the column query from the given dataframe, which containing an SQL query, into additional columns
     The column query contains an SQL query in a string format.
     A key value pair from the SQL query is converted to a column value pair.
@@ -51,7 +52,6 @@ def generate_features_from_sql(data_set: pd.DataFrame):
         :return: a data frame containing the additional columns added
         """
     tqdm.pandas(desc='Convert SQL Queries into additional columns')
-    columns = sql.get_columns()
     parsed_data = data_set.progress_apply(sql.break_sql_query(columns), axis=1)
     # merged_dict = merge_data(parsed_data, columns)
     print('finished processing the data, create data frames')
@@ -76,3 +76,19 @@ def generate_features_from_http(data_set: pd.DataFrame) -> pd.DataFrame:
     results = data_set.apply(http.parse_method_and_file_data, axis=1)
     data_set[['request_method_call', 'starting_frame_number', 'file_data']] = pd.DataFrame(results.tolist())
     return data_set
+
+
+class EngineerFeatures(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        self.message_id_columns = None
+
+    def fit(self, X, y=None):
+        new_ds = X.dropna(how='all')
+        self.message_id_columns = new_ds['message_id'].str.replace('<|>', '', regex=True).str.replace(
+            '-hr', '', regex=False).str.replace(
+            'private|message-notify|-openerp-', '.', regex=True).str.split('.', expand=True).add_prefix('message_id_')
+        return self
+
+    def transform(self, X, y=None):
+        X = X.join(self.message_id_columns)
+        return X

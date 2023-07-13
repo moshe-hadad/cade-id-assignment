@@ -1,5 +1,11 @@
 """This module tests the basic functionality of the feature engineering module"""
 import os
+
+import numpy as np
+import pandas as pd
+from pandas._testing import assert_frame_equal
+from sklearn.pipeline import Pipeline
+
 import case_id_assignment.utilities as util
 import case_id_assignment.feature_engineering as features_eng
 from . import testutils as tu
@@ -51,4 +57,21 @@ def test_generate_features_from_http():
     assert actual_columns == expected_columns, test_message
 
 
+def test_feature_engineering():
+    sample_data = tu.load_sample_data(file_name='sample_for_imputing.csv')
+    pipeline = Pipeline(steps=[
+        ('feature_eng', features_eng.EngineerFeatures())
+    ])
+    results = pipeline.fit_transform(sample_data)
 
+    data = {'message_id_0': ['949753693051100', '574050965068213', '066811463508817', '713444952148438'],
+            'message_id_1': ['1608530433', '1608530433', '1608543481', '1608543481'],
+            'message_id_2': ['504944801330566', '547146558761597', '218040466308594', '232110261917114'],
+            'message_id_3': ['', '', '', ''],
+            'message_id_4': ['@BPW10OD01', '@BPW10OD01', '@BPW10OD01', '@BPW10OD01']}
+    indices = [15, 16, 57, 58]
+
+    actual = results.loc[indices, list(data.keys())]
+    expected = pd.DataFrame(data, index=indices)
+
+    assert_frame_equal(actual, expected)

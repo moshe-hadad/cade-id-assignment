@@ -143,3 +143,9 @@ def test_impute_from_table():
     expected = pd.DataFrame(data, index=indices)
 
     assert_frame_equal(actual, expected)
+
+
+# def test_create_another_file():
+#     df = util.load_data_set('../processed_data/interleaved_df_imputed.csv' '',)
+#     new_df = df[:200]
+#     util.save_data_set(data_set=new_df, data_folder='../data_for_tests', file_name='interleaved_stream_index_imputing.csv')
