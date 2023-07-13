@@ -63,13 +63,15 @@ def test_feature_engineering():
         ('feature_eng', features_eng.EngineerFeatures())
     ])
     results = pipeline.fit_transform(sample_data)
+    # util.save_data_set(data_set=results,data_folder='../data_for_tests',file_name='fe_res.csv')
 
-    data = {'message_id_0': ['949753693051100', '574050965068213', '066811463508817', '713444952148438'],
-            'message_id_1': ['1608530433', '1608530433', '1608543481', '1608543481'],
-            'message_id_2': ['504944801330566', '547146558761597', '218040466308594', '232110261917114'],
-            'message_id_3': ['', '', '', ''],
-            'message_id_4': ['@BPW10OD01', '@BPW10OD01', '@BPW10OD01', '@BPW10OD01']}
-    indices = [15, 16, 57, 58]
+    data = {
+        'message_id_0': ['949753693051100', '574050965068213', '811388984381575', '066811463508817', '713444952148438'],
+        'message_id_1': ['1608530433', '1608530433', '1608530795', '1608543481', '1608543481'],
+        'message_id_2': ['504944801330566', '547146558761597', '007047414779663', '218040466308594', '232110261917114'],
+        'message_id_3': ['', '', '152-purchase', '', ''],
+        'message_id_4': ['@BPW10OD01', '@BPW10OD01', 'order@BPW10OD01', '@BPW10OD01', '@BPW10OD01']}
+    indices = [15, 16, 17, 57, 58]
 
     actual = results.loc[indices, list(data.keys())]
     expected = pd.DataFrame(data, index=indices)
