@@ -51,8 +51,9 @@ def test_generate_features_from_http():
                         'synthetic_sniff_time', 'synthetic_sniff_time_str', 'session_generalized',
                         'HighestLayerProtocol', 'MessageType_WithRole', 'MessageType', 'MessageAttributes',
                         'query_type', 'session_class', 'filter_flag', 'query', 'tables', 'event', 'event_with_roles',
-                        'noise_event', 'Unnamed: 0.1', 'Unnamed: 0', 'request_method_call', 'starting_frame_number',
-                        'file_data', }
+                        'noise_event',  'Unnamed: 0', 'request_method_call', 'starting_frame_number',
+                        'file_data', 'activities', 'Unnamed: 0.3', 'activities_with_bp', 'frame_number',
+                        'real_activity', 'real_activity_action', 'real_case_id', 'stream_index'}
     test_message = _feature_engineering_test_message(actual_columns, expected_columns)
     assert actual_columns == expected_columns, test_message
 
@@ -71,7 +72,7 @@ def test_feature_engineering():
         'message_id_2': ['504944801330566', '547146558761597', '007047414779663', '218040466308594', '232110261917114'],
         'message_id_3': ['', '', '152-purchase', '', ''],
         'message_id_4': ['@BPW10OD01', '@BPW10OD01', 'order@BPW10OD01', '@BPW10OD01', '@BPW10OD01']}
-    indices = [15, 16, 17, 57, 58]
+    indices = [15., 16., 17., 57., 58.]
 
     actual = results.loc[indices, list(data.keys())]
     expected = pd.DataFrame(data, index=indices)

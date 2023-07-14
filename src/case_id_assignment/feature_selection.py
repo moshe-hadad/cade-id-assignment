@@ -22,7 +22,7 @@ def _filter_features(correlation, threshold):
 def simple_correlation_selector(data_set, target_column, threshold):
     correlation = {}
     for column in data_set.columns:
-        if target_column == column:
+        if target_column == column or column == 'file_data':
             continue
         new_df = data_set[[target_column, column]]
         if data_set[column].dtypes == 'object':
