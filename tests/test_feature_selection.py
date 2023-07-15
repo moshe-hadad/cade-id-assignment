@@ -1,3 +1,5 @@
+import pytest
+
 import case_id_assignment.utilities as util
 import case_id_assignment.feature_selection as selector
 
@@ -23,6 +25,8 @@ def test_simple_correlation_selector():
 #     assert actual == expected
 
 # def test_create_sample_for_correlation():
-#     full_data = util.load_data_set('../processed_data/isolated_df_imputed.csv')
-#     sample_data = full_data[:200]
-#     util.save_data_set(sample_data, data_folder='../data_for_tests', file_name='sample_for_correlation.csv')
+#     isolated_df = util.load_data_set('../data/ptp_isolated_data.csv')
+#     interleaved_df = util.load_data_set('../data/ptp_interleaved_data.csv')
+#
+#     util.save_data_set(isolated_df[:20], data_folder='../data_for_tests', file_name='isolated_sample_data.csv')
+#     util.save_data_set(interleaved_df[:20], data_folder='../data_for_tests', file_name='interleaved_sample_data.csv')

@@ -51,7 +51,7 @@ def test_generate_features_from_http():
                         'synthetic_sniff_time', 'synthetic_sniff_time_str', 'session_generalized',
                         'HighestLayerProtocol', 'MessageType_WithRole', 'MessageType', 'MessageAttributes',
                         'query_type', 'session_class', 'filter_flag', 'query', 'tables', 'event', 'event_with_roles',
-                        'noise_event',  'Unnamed: 0', 'request_method_call', 'starting_frame_number',
+                        'noise_event', 'request_method_call', 'starting_frame_number',
                         'file_data', 'activities', 'Unnamed: 0.3', 'activities_with_bp', 'frame_number',
                         'real_activity', 'real_activity_action', 'real_case_id', 'stream_index'}
     test_message = _feature_engineering_test_message(actual_columns, expected_columns)

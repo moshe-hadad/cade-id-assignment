@@ -76,6 +76,10 @@ def engineer_features(isolated_df_processed: pd.DataFrame, interleaved_df_proces
         ])
         isolated_df_engineered = pipeline.fit_transform(isolated_df_processed)
         interleaved_df_engineered = pipeline.fit_transform(interleaved_df_processed)
+
+        isolated_df_engineered = _str_to_nan(isolated_df_engineered)
+        interleaved_df_engineered = _str_to_nan(interleaved_df_engineered)
+
         if save_results:
             util.save_data_set(data_set=isolated_df_imputed, data_folder='../../processed_data',
                                file_name=isolated_df_engineered)
@@ -86,6 +90,12 @@ def engineer_features(isolated_df_processed: pd.DataFrame, interleaved_df_proces
         interleaved_df_engineered = util.load_data_set(file_path=f'{processed_data_folder}/{interleaved_df_engineered}')
 
     return isolated_df_engineered, interleaved_df_engineered
+
+
+def _str_to_nan(data_set):
+    """Conver empty strings or NULL strings into np.nan"""
+    return data_set.replace('', np.nan).replace('NULL', np.nan).replace(' NULL',
+                                                                        np.nan)
 
 
 def pre_processing_data(isolated_data_set: pd.DataFrame, interleaved_data_set: pd.DataFrame, save_results: bool = False,
@@ -117,10 +127,8 @@ def pre_processing_data(isolated_data_set: pd.DataFrame, interleaved_data_set: p
         print('Process interleaved data set - HTTP attributes to features')
         interleaved_df_processed = features_eng.generate_features_from_http(data_set=interleaved_df_processed)
 
-        isolated_df_processed = isolated_df_processed.replace('', np.nan).replace('NULL', np.nan).replace(' NULL',
-                                                                                                          np.nan)
-        interleaved_df_processed = interleaved_df_processed.replace('', np.nan).replace('NULL', np.nan).replace(' NULL',
-                                                                                                                np.nan)
+        isolated_df_processed = _str_to_nan(isolated_df_processed)
+        interleaved_df_processed = _str_to_nan(interleaved_df_processed)
 
         if save_results:
             util.save_data_set(data_set=isolated_df_processed, data_folder=processed_data_folder,

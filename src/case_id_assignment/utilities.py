@@ -22,7 +22,10 @@ def post_process(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_data_set(file_path: str) -> pd.DataFrame:
-    """Loads a CSV file using Pandas
+    """Loads a CSV file using Pandas. Adds a .csv to the file name if the filename extension is not csv.
+    When loading the file, check to see if data types for the given file were also saved by looking for a file named
+    dtypes_{file_name}.csv. If such file is found, it loads the data set with the dtypes listed in
+    dtypes_{file_name}.csv.
 
     :param file_path: a full path for the file to load
     :return: Pandas FataFrame
@@ -36,7 +39,12 @@ def load_data_set(file_path: str) -> pd.DataFrame:
         return post_process(pd.read_csv(file_path, index_col=0))
 
 
-def load_dtypes(file_path):
+def load_dtypes(file_path: str) -> pd.DataFrame:
+    """Load the data types listed in the file loaded from file_path
+
+    :param file_path: the path to the file containing the dtypes
+    :return: pd.DataFrame containing the dtypes
+    """
     file_name = os.path.basename(file_path)
     dtypes_path = file_path.replace(file_name, f'dtypes_for_{file_name}')
     try:
@@ -45,7 +53,8 @@ def load_dtypes(file_path):
         return pd.DataFrame()
 
 
-def save_to_file(data, file_path):
+def save_to_file(data: pd.DataFrame, file_path: str) -> None:
+    """Saves a dataframe to the location given by file_path"""
     with open(file_path, 'w') as json_file:
         simplejson.dump(data, json_file)
 
@@ -71,6 +80,7 @@ def save_data_set(data_set: pd.DataFrame, data_folder: str, file_name: str) -> N
 
 
 def case_id_mapping():
+    """Return a dict mapping between the number representing case id and an enumeration of the case id"""
     return {399: '{0}',
             400: '{1}',
             401: '{2}',
