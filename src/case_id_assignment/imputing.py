@@ -40,8 +40,9 @@ def parse_null(file_data):
 ACTION_NAME = operator.itemgetter(4, 5)
 
 
-def parse_file_data(file_data):
+def parse_file_data(row):
     try:
+        file_data = row['file_data']
         file_data = eval(file_data) if isinstance(file_data, str) else file_data
         if file_data:
             command = util.first_item(file_data)
@@ -62,12 +63,24 @@ def _try_convert_to_int(value):
     return value
 
 
-class ImputeFromFileData(BaseEstimator, TransformerMixin):
-    def __init__(self):
+class Imputer(BaseEstimator, TransformerMixin):
+    def __init__(self, func):
+        self.func = func
         self.to_fill = None
 
     def fit(self, X, y=None):
-        results = X['file_data'].apply(parse_file_data)
+        results = X.apply(self.func, axis=1)
+        self.to_fill = results[results.notnull()]
+        return self
+
+
+class ImputeFromFileData(Imputer):
+
+    def __init__(self):
+        super().__init__(parse_file_data)
+
+    def fit(self, X, y=None):
+        results = X.apply(parse_file_data, axis=1)
         self.to_fill = results[results.notnull()]
         return self
 
@@ -125,14 +138,9 @@ def parse_table_column(row):
     return {f'{table}_id': float(id)}
 
 
-class ImputeFromTable(BaseEstimator, TransformerMixin):
+class ImputeFromTable(Imputer):
     def __init__(self):
-        self.to_fill = None
-
-    def fit(self, X, y=None):
-        results = X.apply(parse_table_column, axis=1)
-        self.to_fill = results[results.notnull()]
-        return self
+        super().__init__(parse_table_column)
 
     def transform(self, X, y=None):
         for index, items in self.to_fill.items():
@@ -149,25 +157,69 @@ def parse_html_columns(row):
     body_html = row['body_html']
     po_from_body = util.po_from_html(body)
     po_from_body_html = util.po_from_html(body_html)
+    if not po_from_body and not po_from_body_html:
+        return None
 
-    query = row['query']
-    id = _extract_id_from_query(query)
-    id = _deal_with_double_id(id)
-    tables = row['tables']
-    tables = eval(tables)
-    table = util.first_item(tables)
+    po_id = _to_numeric(po_from_body, po_from_body_html)
 
-    return {f'{table}_id': float(id)}
+    return {'purchase_order_id': float(po_id)}
 
 
-class ImputeFromHtml(BaseEstimator, TransformerMixin):
+def _str_to_po(po_str):
+    if isinstance(po_str, str) and po_str:
+        return float(po_str.replace('Ref ', '')
+                     .replace('Re: ', '')
+                     .replace('PO', '')
+                     .replace('YourCompany Order (', '')
+                     .replace(')', ''))
+    else:
+        return None
+
+
+def _to_numeric(po_from_body, po_from_body_html):
+    po_str = None
+    if po_from_body and po_from_body_html:
+        if po_from_body != po_from_body_html:
+            print(f'po_from_body: {po_from_body} does not equal to po_from_body_html:{po_from_body_html}')
+        po_str = po_from_body
+    else:
+        po_str = po_from_body or po_from_body_html
+
+    po_id = _str_to_po(po_str)
+    return po_id
+
+
+class ImputeFromHtml(Imputer):
+
     def __init__(self):
-        self.to_fill = None
+        super().__init__(parse_html_columns)
 
-    def fit(self, X, y=None):
-        results = X.apply(parse_html_columns, axis=1)
-        self.to_fill = results[results.notnull()]
-        return self
+    def transform(self, X, y=None):
+        for index, items in self.to_fill.items():
+            columns = list(items.keys())
+            values = list(items.values())
+            values = [_try_convert_to_int(value) for value in values]
+            X.loc[index, columns] = values
+
+        return X
+
+
+def extract_po(columns):
+    def extract(row):
+        for column in columns:
+            po_str = row[column]
+            po_id = _str_to_po(po_str)
+            if po_id:
+                break
+
+        return {'purchase_order_id': po_id}
+
+    return extract
+
+
+class ImputePO(Imputer):
+    def __init__(self, columns):
+        super().__init__(extract_po(columns))
 
     def transform(self, X, y=None):
         for index, items in self.to_fill.items():

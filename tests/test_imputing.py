@@ -19,10 +19,10 @@ def _input_sample_data():
     return results
 
 
-def _impute_from_table_data():
+def _impute_from_table_data(inputer_class=imp.ImputeFromTable()):
     sample_data = tu.load_sample_data(file_name='sample_for_imputing.csv')
     pipeline = Pipeline(steps=[
-        ('inputter', imp.ImputeFromTable())
+        ('inputter', inputer_class)
     ])
     results = pipeline.fit_transform(sample_data)
     return results
@@ -155,9 +155,18 @@ def test_extract_po_from_html():
     expected_po = "PO00982"
     assert actual_po == expected_po
 
+    actual_po = util.po_from_html(np.NAN)
+    assert actual_po is None
+
+    actual_po = util.po_from_html(None)
+    assert actual_po is None
+
+    actual_po = util.po_from_html(12.0)
+    assert actual_po is None
+
 
 def test_impute_from_html():
-    results = _impute_from_table_data()
+    results = _impute_from_table_data(inputer_class=imp.ImputeFromHtml())
     data = {'purchase_order_id': [156., 156.]}
     indices = [25926., 25927.]
 
@@ -165,6 +174,7 @@ def test_impute_from_html():
     expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
+
 
 # def test_create_another_file():
 #     df = util.load_data_set('../processed_data/interleaved_df_imputed.csv' '',)
@@ -175,3 +185,26 @@ def test_impute_from_html():
 # def test_fix_index():
 #     sfi = util.load_data_set('./data_for_tests/sample_for_imputing.csv')
 #     util.save_data_set(sfi, data_folder='./data_for_tests', file_name='sample_for_imputing.csv')
+def test__to_numeric():
+    assert_to_numeric(po_body='PO00982', po_html='PO00982')
+
+    assert_to_numeric(po_body=None, po_html='PO00982')
+
+    assert_to_numeric(po_body='PO00982', po_html=None)
+
+
+def assert_to_numeric(po_body, po_html):
+    actual_po = imp._to_numeric(po_body, po_html)
+    assert actual_po == 982.0
+
+
+def test_impute_po():
+    columns = ['subject', 'origin']
+    results = _impute_from_table_data(inputer_class=imp.ImputePO(columns))
+    data = {'purchase_order_id': [152., 153.]}
+    indices = [25928, 25929]
+
+    actual = results.loc[indices, list(data.keys())]
+    expected = expected_results(data, indices)
+
+    assert_frame_equal(actual, expected)

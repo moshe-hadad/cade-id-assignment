@@ -3,6 +3,7 @@
 import operator
 import os.path
 
+import numpy as np
 import pandas as pd
 import simplejson
 from bs4 import BeautifulSoup
@@ -94,9 +95,9 @@ def case_id_mapping():
             408: '{9}'}
 
 
-def po_from_html(body_text):
-    if not body_text:
+def po_from_html(body_text: str):
+    if not (isinstance(body_text, str) and body_text):
         return None
     soup = BeautifulSoup(body_text)
-    po = soup.strong.text
+    po = soup.strong.text if soup.strong else None
     return po
