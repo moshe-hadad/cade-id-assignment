@@ -9,6 +9,7 @@ from sklearn.pipeline import Pipeline
 import case_id_assignment.utilities as util
 import case_id_assignment.feature_engineering as features_eng
 from . import testutils as tu
+from .testutils import expected_results
 
 
 def _feature_engineering_test_message(actual_columns: set, expected_columns: set) -> str:
@@ -75,6 +76,6 @@ def test_feature_engineering():
     indices = [15., 16., 17., 57., 58.]
 
     actual = results.loc[indices, list(data.keys())]
-    expected = pd.DataFrame(data, index=indices)
+    expected = expected_results(data=data, indices=indices)
 
     assert_frame_equal(actual, expected)

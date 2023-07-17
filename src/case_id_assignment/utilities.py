@@ -5,6 +5,7 @@ import os.path
 
 import pandas as pd
 import simplejson
+from bs4 import BeautifulSoup
 
 first_item = operator.itemgetter(0)
 
@@ -91,3 +92,11 @@ def case_id_mapping():
             406: '{7}',
             407: '{8}',
             408: '{9}'}
+
+
+def po_from_html(body_text):
+    if not body_text:
+        return None
+    soup = BeautifulSoup(body_text)
+    po = soup.strong.text
+    return po

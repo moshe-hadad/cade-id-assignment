@@ -142,3 +142,38 @@ class ImputeFromTable(BaseEstimator, TransformerMixin):
             X.loc[index, columns] = values
 
         return X
+
+
+def parse_html_columns(row):
+    body = row['body']
+    body_html = row['body_html']
+    po_from_body = util.po_from_html(body)
+    po_from_body_html = util.po_from_html(body_html)
+
+    query = row['query']
+    id = _extract_id_from_query(query)
+    id = _deal_with_double_id(id)
+    tables = row['tables']
+    tables = eval(tables)
+    table = util.first_item(tables)
+
+    return {f'{table}_id': float(id)}
+
+
+class ImputeFromHtml(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        self.to_fill = None
+
+    def fit(self, X, y=None):
+        results = X.apply(parse_html_columns, axis=1)
+        self.to_fill = results[results.notnull()]
+        return self
+
+    def transform(self, X, y=None):
+        for index, items in self.to_fill.items():
+            columns = list(items.keys())
+            values = list(items.values())
+            values = [_try_convert_to_int(value) for value in values]
+            X.loc[index, columns] = values
+
+        return X

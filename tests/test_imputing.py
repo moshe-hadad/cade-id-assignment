@@ -7,6 +7,7 @@ import case_id_assignment.imputing as imp
 import case_id_assignment.utilities as util
 
 from . import testutils as tu
+from .testutils import expected_results
 
 
 def _input_sample_data():
@@ -29,11 +30,11 @@ def _impute_from_table_data():
 
 def test_impute_sale_order_create():
     results = _input_sample_data()
-    data = {'partner_id': 1, 'partner_invoice_id': 1, 'partner_shipping_id': 1}
+    data = {'partner_id': 1., 'partner_invoice_id': 1., 'partner_shipping_id': 1.}
     indices = [7., 49., 92.]
 
     actual = results.loc[indices, list(data.keys())]
-    expected = pd.DataFrame(data, index=indices, dtype=float)
+    expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
 
@@ -46,7 +47,7 @@ def test_impute_sale_order_line_create():
     indices = [20., 62.]
 
     actual = results.loc[indices, list(data.keys())]
-    expected = pd.DataFrame(data, index=indices)
+    expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
 
@@ -58,7 +59,7 @@ def test_impute_account_invoice_create():
     indices = [22163., 25925.]
 
     actual = results.loc[indices, list(data.keys())]
-    expected = pd.DataFrame(data, index=indices)
+    expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
 
@@ -69,7 +70,7 @@ def test_impute_purchase_requisition_create():
     indices = [3031., 4230.]
 
     actual = results.loc[indices, list(data.keys())]
-    expected = pd.DataFrame(data, index=indices)
+    expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
 
@@ -81,7 +82,7 @@ def test_impute_purchase_requisition_line_create():
     indices = [3637., 3658.]
 
     actual = results.loc[indices, list(data.keys())]
-    expected = pd.DataFrame(data, index=indices)
+    expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
 
@@ -93,7 +94,7 @@ def test_impute_account_invoice_line_create():
     indices = [21819., 22447.]
 
     actual = results.loc[indices, list(data.keys())]
-    expected = pd.DataFrame(data, index=indices)
+    expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
 
@@ -105,7 +106,7 @@ def test_impute_account_payment_create():
     indices = [22326.]
 
     actual = results.loc[indices, list(data.keys())]
-    expected = pd.DataFrame(data, index=indices)
+    expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
 
@@ -118,7 +119,7 @@ def test_impute_purchase_order_button_confirm():
     indices = [16075., 16725.]
 
     actual = results.loc[indices, list(data.keys())]
-    expected = pd.DataFrame(data, index=indices)
+    expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
 
@@ -129,7 +130,7 @@ def test_impute_purchase_order_create():
     indices = [10163., 10416.]
 
     actual = results.loc[indices, list(data.keys())]
-    expected = pd.DataFrame(data, index=indices)
+    expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
 
@@ -140,12 +141,37 @@ def test_impute_from_table():
     indices = [11., 12., 13., 14.]
 
     actual = results.loc[indices, list(data.keys())]
-    expected = pd.DataFrame(data, index=indices)
+    expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
 
+
+def test_extract_po_from_html():
+    body_text = """<div style=margin:0px; padding:0px>     <p style=margin:0px; padding:0px; font-size:13px>         
+    Here is in attachment a purchase order <strong>PO00982</strong><br><br>         
+    If you have any questions please do not hesitate to contact us.         <br><br>         
+    Best regards </p> </div>"""
+    actual_po = util.po_from_html(body_text)
+    expected_po = "PO00982"
+    assert actual_po == expected_po
+
+
+def test_impute_from_html():
+    results = _impute_from_table_data()
+    data = {'purchase_order_id': [156., 156.]}
+    indices = [25926., 25927.]
+
+    actual = results.loc[indices, list(data.keys())]
+    expected = expected_results(data, indices)
+
+    assert_frame_equal(actual, expected)
 
 # def test_create_another_file():
 #     df = util.load_data_set('../processed_data/interleaved_df_imputed.csv' '',)
 #     new_df = df[:200]
 #     util.save_data_set(data_set=new_df, data_folder='../data_for_tests', file_name='interleaved_stream_index_imputing.csv')
+
+
+# def test_fix_index():
+#     sfi = util.load_data_set('./data_for_tests/sample_for_imputing.csv')
+#     util.save_data_set(sfi, data_folder='./data_for_tests', file_name='sample_for_imputing.csv')

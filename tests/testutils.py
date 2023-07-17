@@ -16,3 +16,9 @@ def load_sample_data(file_name: str = 'interleaved_sample_data.csv') -> pd.DataF
 
     data_set_sample = util.load_data_set(file_path=data_sample_path)
     return data_set_sample
+
+
+def expected_results(data, indices):
+    expected = pd.DataFrame(data, index=indices)
+    expected.index = expected.index.astype('int64')
+    return expected
