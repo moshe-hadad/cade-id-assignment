@@ -101,3 +101,13 @@ def po_from_html(body_text: str):
     soup = BeautifulSoup(body_text)
     po = soup.strong.text if soup.strong else None
     return po
+
+
+def is_nan(model):
+    if model is None:
+        return True
+
+    if isinstance(model, str):
+        return not model
+
+    return np.isnan(model)

@@ -73,6 +73,15 @@ class Imputer(BaseEstimator, TransformerMixin):
         self.to_fill = results[results.notnull()]
         return self
 
+    def transform(self, X, y=None):
+        for index, items in self.to_fill.items():
+            columns = list(items.keys())
+            values = list(items.values())
+            values = [_try_convert_to_int(value) for value in values]
+            X.loc[index, columns] = values
+
+        return X
+
 
 class ImputeFromFileData(Imputer):
 
@@ -83,15 +92,6 @@ class ImputeFromFileData(Imputer):
         results = X.apply(parse_file_data, axis=1)
         self.to_fill = results[results.notnull()]
         return self
-
-    def transform(self, X, y=None):
-        for index, items in self.to_fill.items():
-            columns = list(items.keys())
-            values = list(items.values())
-            values = [_try_convert_to_int(value) for value in values]
-            X.loc[index, columns] = values
-
-        return X
 
 
 def _id_from_query_equals(query):
@@ -142,19 +142,9 @@ class ImputeFromTable(Imputer):
     def __init__(self):
         super().__init__(parse_table_column)
 
-    def transform(self, X, y=None):
-        for index, items in self.to_fill.items():
-            columns = list(items.keys())
-            values = list(items.values())
-            values = [_try_convert_to_int(value) for value in values]
-            X.loc[index, columns] = values
-
-        return X
-
 
 def parse_html_columns(row):
-    body = row['body']
-    body_html = row['body_html']
+    body, body_html = row[['body', 'body_html']]
     po_from_body = util.po_from_html(body)
     po_from_body_html = util.po_from_html(body_html)
     if not po_from_body and not po_from_body_html:
@@ -167,13 +157,14 @@ def parse_html_columns(row):
 
 def _str_to_po(po_str):
     if isinstance(po_str, str) and po_str:
-        return float(po_str.replace('Ref ', '')
-                     .replace('Re: ', '')
-                     .replace('PO', '')
-                     .replace('YourCompany Order (', '')
-                     .replace(')', ''))
+        return float(_clean_po_str(po_str))
     else:
-        return None
+        return None if np.isnan(po_str) else po_str
+
+
+def _clean_po_str(po_str):
+    return po_str.replace('Ref ', '').replace('Re: ', '').replace('PO', '').replace('YourCompany Order (', '').replace(
+        ')', '').replace('RFQ_', '').replace('PO_)', '').replace('.pdf', '').replace('_', '')
 
 
 def _to_numeric(po_from_body, po_from_body_html):
@@ -194,15 +185,6 @@ class ImputeFromHtml(Imputer):
     def __init__(self):
         super().__init__(parse_html_columns)
 
-    def transform(self, X, y=None):
-        for index, items in self.to_fill.items():
-            columns = list(items.keys())
-            values = list(items.values())
-            values = [_try_convert_to_int(value) for value in values]
-            X.loc[index, columns] = values
-
-        return X
-
 
 def extract_po(columns):
     def extract(row):
@@ -221,11 +203,17 @@ class ImputePO(Imputer):
     def __init__(self, columns):
         super().__init__(extract_po(columns))
 
-    def transform(self, X, y=None):
-        for index, items in self.to_fill.items():
-            columns = list(items.keys())
-            values = list(items.values())
-            values = [_try_convert_to_int(value) for value in values]
-            X.loc[index, columns] = values
 
-        return X
+def extract_po_from_res_id(row):
+    res_id, res_model, model = row[['res_id', 'res_model', 'model']]
+    model = res_model or model
+    if util.is_nan(model):
+        return None
+
+    key = f"{model.replace('.', '_')}_id"
+    return {key: res_id}
+
+
+class ImputeFromRes(Imputer):
+    def __init__(self):
+        super().__init__(extract_po_from_res_id)

@@ -127,9 +127,9 @@ mail_mail_id,float64
 res_partner_id,float64
 active,float64
 datas_fname,object
-mimetype,float64
+mimetype,object
 public,float64
-type,float64
+type,object
 file_size,float64
 checksum,float64
 index_content,float64

@@ -1,6 +1,7 @@
 import numpy as np
 
 import pandas as pd
+import pytest
 from sklearn.pipeline import Pipeline
 from pandas.testing import assert_frame_equal
 import case_id_assignment.imputing as imp
@@ -199,12 +200,31 @@ def assert_to_numeric(po_body, po_html):
 
 
 def test_impute_po():
-    columns = ['subject', 'origin']
+    columns = ['subject', 'origin', 'res_name', 'datas_fname']
     results = _impute_from_table_data(inputer_class=imp.ImputePO(columns))
-    data = {'purchase_order_id': [152., 153.]}
-    indices = [25928, 25929]
+    data = {'purchase_order_id': [152., 153., 153., 158., 152.]}
+    indices = [25928, 25929, 25932, 25933, 25934]
 
     actual = results.loc[indices, list(data.keys())]
     expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)
+
+
+def test_impute_from_res_id():
+    results = _impute_from_table_data(inputer_class=imp.ImputeFromRes())
+    data = {'purchase_order_id': [156., np.nan], 'sale_order_id': [np.nan, 94.]}
+    indices = [25930, 25931]
+
+    actual = results.loc[indices, list(data.keys())]
+    expected = expected_results(data, indices)
+
+    assert_frame_equal(actual, expected)
+
+
+def test__clean_po_str():
+    actual = imp._clean_po_str('RFQ_PO00158.pdf')
+    assert actual == '00158'
+
+    actual = imp._clean_po_str('PO_PO00152.pdf')
+    assert actual == '00152'

@@ -13,9 +13,9 @@ import case_id_assignment.sqlutil as sql
 import case_id_assignment.assignment as case_id_assigner
 import case_id_assignment.evaluation as evaluation
 
-PRE_PROCESS = False
-FEATURE_ENGINEERING = False
-IMPUTING = False
+PRE_PROCESS = True
+FEATURE_ENGINEERING = True
+IMPUTING = True
 
 
 def impute(isolated_data_set_engineered: pd.DataFrame, interleaved_data_set_engineered: pd.DataFrame,
@@ -37,7 +37,10 @@ def impute(isolated_data_set_engineered: pd.DataFrame, interleaved_data_set_engi
     if impute:
         impute_pipeline = Pipeline(steps=[
             ('tableimputer', imputer.ImputeFromTable()),
-            ('imputter', imputer.ImputeFromFileData())
+            ('imputter', imputer.ImputeFromFileData()),
+            ('imputter', imputer.ImputeFromHtml()),
+            ('imputter', imputer.ImputePO()),
+            ('imputter', imputer.ImputeFromRes())
         ])
         isolated_df_imputed = impute_pipeline.fit_transform(isolated_data_set_engineered)
         interleaved_df_imputed = impute_pipeline.fit_transform(interleaved_data_set_engineered)
@@ -160,9 +163,6 @@ if __name__ == '__main__':
     # ---- Impute Data, complete missing values --- #
     isolated_df_imputed, interleaved_df_imputed = impute(isolated_df_engineered, interleaved_df_engineered,
                                                          impute=IMPUTING)
-
-    print(isolated_df_imputed['create_uid'].dtype)
-    print(interleaved_df_imputed['create_uid'].dtype)
 
     # Selecting features based on correlation
     # list_of_features = selector.simple_correlation_selector(isolated_df_processed, target_column='InstanceNumber',
