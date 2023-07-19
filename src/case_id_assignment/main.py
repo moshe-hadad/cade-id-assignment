@@ -13,10 +13,6 @@ import case_id_assignment.sqlutil as sql
 import case_id_assignment.assignment as case_id_assigner
 import case_id_assignment.evaluation as evaluation
 
-PRE_PROCESS = True
-FEATURE_ENGINEERING = True
-IMPUTING = True
-
 
 def impute(isolated_data_set_engineered: pd.DataFrame, interleaved_data_set_engineered: pd.DataFrame,
            save_results: bool = False, impute: bool = True) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -35,19 +31,21 @@ def impute(isolated_data_set_engineered: pd.DataFrame, interleaved_data_set_engi
     isolated_df_imputed_name = 'isolated_df_imputed'
     interleaved_df_imputed_name = 'interleaved_df_imputed'
     if impute:
+        columns = ['subject', 'origin', 'res_name', 'datas_fname']
         impute_pipeline = Pipeline(steps=[
             ('tableimputer', imputer.ImputeFromTable()),
-            ('imputter', imputer.ImputeFromFileData()),
-            ('imputter', imputer.ImputeFromHtml()),
-            ('imputter', imputer.ImputePO()),
-            ('imputter', imputer.ImputeFromRes())
+            ('filedata_imputer', imputer.ImputeFromFileData()),
+            ('html_imputer', imputer.ImputeFromHtml()),
+            ('po_imputer', imputer.ImputePO(columns)),
+            ('res_imputer', imputer.ImputeFromRes())
         ])
         isolated_df_imputed = impute_pipeline.fit_transform(isolated_data_set_engineered)
         interleaved_df_imputed = impute_pipeline.fit_transform(interleaved_data_set_engineered)
-        util.save_data_set(data_set=isolated_df_imputed, data_folder='../../processed_data',
-                           file_name=isolated_df_imputed_name)
-        util.save_data_set(data_set=interleaved_df_imputed, data_folder='../../processed_data',
-                           file_name=interleaved_df_imputed_name)
+        if save_results:
+            util.save_data_set(data_set=isolated_df_imputed, data_folder='../../processed_data',
+                               file_name=isolated_df_imputed_name)
+            util.save_data_set(data_set=interleaved_df_imputed, data_folder='../../processed_data',
+                               file_name=interleaved_df_imputed_name)
     else:
         isolated_df_imputed = util.load_data_set(file_path=f'{processed_data_folder}/{isolated_df_imputed_name}')
         interleaved_df_imputed = util.load_data_set(
@@ -71,8 +69,8 @@ def engineer_features(isolated_df_processed: pd.DataFrame, interleaved_df_proces
     :return: isolated data set  and interleaved data set after feature engineering
     """
     processed_data_folder = '../../processed_data'
-    isolated_df_engineered = 'isolated_df_engineered'
-    interleaved_df_engineered = 'interleaved_df_engineered'
+    isolated_df_engineered_name = 'isolated_df_engineered'
+    interleaved_df_engineered_name = 'interleaved_df_engineered'
     if feature_engineering:
         pipeline = Pipeline(steps=[
             ('feature_eng', features_eng.EngineerFeatures())
@@ -84,13 +82,14 @@ def engineer_features(isolated_df_processed: pd.DataFrame, interleaved_df_proces
         interleaved_df_engineered = _str_to_nan(interleaved_df_engineered)
 
         if save_results:
-            util.save_data_set(data_set=isolated_df_imputed, data_folder='../../processed_data',
-                               file_name=isolated_df_engineered)
-            util.save_data_set(data_set=interleaved_df_imputed, data_folder='../../processed_data',
-                               file_name=interleaved_df_engineered)
+            util.save_data_set(data_set=isolated_df_engineered, data_folder='../../processed_data',
+                               file_name=isolated_df_engineered_name)
+            util.save_data_set(data_set=interleaved_df_engineered, data_folder='../../processed_data',
+                               file_name=interleaved_df_engineered_name)
     else:
-        isolated_df_engineered = util.load_data_set(file_path=f'{processed_data_folder}/{isolated_df_engineered}')
-        interleaved_df_engineered = util.load_data_set(file_path=f'{processed_data_folder}/{interleaved_df_engineered}')
+        isolated_df_engineered = util.load_data_set(file_path=f'{processed_data_folder}/{isolated_df_engineered_name}')
+        interleaved_df_engineered = util.load_data_set(
+            file_path=f'{processed_data_folder}/{interleaved_df_engineered_name}')
 
     return isolated_df_engineered, interleaved_df_engineered
 
@@ -113,8 +112,8 @@ def pre_processing_data(isolated_data_set: pd.DataFrame, interleaved_data_set: p
     :return: isolated data set  and interleaved data set after pre-processing
     """
     processed_data_folder = '../../processed_data'
-    isolated_df_processed = 'isolated_df_processed'
-    interleaved_df_processed = 'interleaved_df_processed'
+    isolated_df_processed_name = 'isolated_df_processed'
+    interleaved_df_processed_name = 'interleaved_df_processed'
 
     if pre_process:
         columns = sql.get_columns()
@@ -135,15 +134,20 @@ def pre_processing_data(isolated_data_set: pd.DataFrame, interleaved_data_set: p
 
         if save_results:
             util.save_data_set(data_set=isolated_df_processed, data_folder=processed_data_folder,
-                               file_name=isolated_df_processed)
+                               file_name=isolated_df_processed_name)
             util.save_data_set(data_set=interleaved_df_processed, data_folder=processed_data_folder,
-                               file_name=interleaved_df_processed)
+                               file_name=interleaved_df_processed_name)
     else:
-        isolated_df_processed = util.load_data_set(file_path=f'{processed_data_folder}/{isolated_df_processed}')
-        interleaved_df_processed = util.load_data_set(file_path=f'{processed_data_folder}/{interleaved_df_processed}')
+        isolated_df_processed = util.load_data_set(file_path=f'{processed_data_folder}/{isolated_df_processed_name}')
+        interleaved_df_processed = util.load_data_set(
+            file_path=f'{processed_data_folder}/{interleaved_df_processed_name}')
 
     return isolated_df_processed, interleaved_df_processed
 
+
+PRE_PROCESS = False
+FEATURE_ENGINEERING = False
+IMPUTING = True
 
 if __name__ == '__main__':
     # ---------------  Load data sets ---------------- #
@@ -153,21 +157,24 @@ if __name__ == '__main__':
 
     # ---- Pre-process the data by breaking down SQL queries and message attributes to add columns --- #
     isolated_df_processed, interleaved_df_processed = pre_processing_data(isolated_data_set, interleaved_data_set,
+                                                                          save_results=True,
                                                                           pre_process=PRE_PROCESS)
 
     # ---- Feature Engineering, manipulate features, change format, process value etc --- #
     isolated_df_engineered, interleaved_df_engineered = engineer_features(isolated_df_processed,
                                                                           interleaved_df_processed,
+                                                                          save_results=True,
                                                                           feature_engineering=FEATURE_ENGINEERING)
 
     # ---- Impute Data, complete missing values --- #
     isolated_df_imputed, interleaved_df_imputed = impute(isolated_df_engineered, interleaved_df_engineered,
+                                                         save_results=True,
                                                          impute=IMPUTING)
 
     # Selecting features based on correlation
-    # list_of_features = selector.simple_correlation_selector(isolated_df_processed, target_column='InstanceNumber',
-    #                                                         threshold=0.95)
-    # print(list_of_features)
+    list_of_features = selector.simple_correlation_selector(isolated_df_processed, target_column='InstanceNumber',
+                                                            threshold=0.95)
+    print(list_of_features)
     # # Impute data on the interleaved data set
     # # todo work on the imputing module
     # interleaved_df_processed = imputer.impute(data_set=interleaved_df_processed, method='')

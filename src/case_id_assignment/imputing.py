@@ -6,6 +6,8 @@ import xml.etree.ElementTree as et
 
 import pandas as pd
 import simplejson
+from tqdm import tqdm
+
 import case_id_assignment.utilities as util
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -69,12 +71,14 @@ class Imputer(BaseEstimator, TransformerMixin):
         self.to_fill = None
 
     def fit(self, X, y=None):
-        results = X.apply(self.func, axis=1)
+        tqdm.pandas(desc=f'Collect values to imputer: {self.func.__name__}')
+        results = X.progress_apply(self.func, axis=1)
         self.to_fill = results[results.notnull()]
         return self
 
     def transform(self, X, y=None):
-        for index, items in self.to_fill.items():
+        print(f'Impute values from {self.func.__name__}')
+        for index, items in tqdm(self.to_fill.items()):
             columns = list(items.keys())
             values = list(items.values())
             values = [_try_convert_to_int(value) for value in values]
@@ -157,6 +161,8 @@ def parse_html_columns(row):
 
 def _str_to_po(po_str):
     if isinstance(po_str, str) and po_str:
+        if 'WH/IN' in po_str:
+            return None
         return float(_clean_po_str(po_str))
     else:
         return None if np.isnan(po_str) else po_str
@@ -176,6 +182,8 @@ def _to_numeric(po_from_body, po_from_body_html):
     else:
         po_str = po_from_body or po_from_body_html
 
+    if 'WH/IN' in po_str:
+        return None
     po_id = _str_to_po(po_str)
     return po_id
 

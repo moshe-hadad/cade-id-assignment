@@ -2,7 +2,9 @@
 It contains methods to break down columns to several columns, combined different columns into one, encoding string to
 numerical values, converting and scaling columns
 """
+from collections import defaultdict
 
+import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from tqdm.auto import tqdm
@@ -23,6 +25,25 @@ def get_index(data_set, item):
     index = data_set[(data_set['frame.number'] == frame_number) & (data_set['InstanceNumber'] == instance_number) & (
             data_set['BusinessActivity'] == activity)].index
     return index
+
+
+def _merge_dict(parsed_data: list[dict]) -> dict:
+    resulted_dict = {}
+    rows_number = 0
+    for item in tqdm(parsed_data):
+        for key in item:
+            if key in resulted_dict:
+                resulted_dict[key].append(item[key])
+            else:
+                values = [np.NAN] * rows_number
+                values.append(item[key])
+                resulted_dict[key] = values
+        rows_number += 1
+        for key in resulted_dict:
+            if len(resulted_dict[key]) != rows_number:
+                resulted_dict[key].append(np.nan)
+
+    return resulted_dict
 
 
 def generate_features_from_sql(data_set: pd.DataFrame, columns):
@@ -53,13 +74,10 @@ def generate_features_from_sql(data_set: pd.DataFrame, columns):
         """
     tqdm.pandas(desc='Convert SQL Queries into additional columns')
     parsed_data = data_set.progress_apply(sql.break_sql_query(columns), axis=1)
-    # merged_dict = merge_data(parsed_data, columns)
+    merged_dict = _merge_dict(parsed_data)
     print('finished processing the data, create data frames')
-    # complete_data_set = pd.DataFrame(merged_dict)
-    # data_frames = [pd.DataFrame(item, index=['pnumber']) for item in parsed_data if item]
-    data_frames = [pd.DataFrame(item, index=get_index(data_set, item)) for item in parsed_data if item]
     print('merge data frames to one global data frame')
-    global_df = reduce(lambda df1, df2: pd.concat([df1, df2]), data_frames)
+    global_df = pd.DataFrame(merged_dict)
     return global_df
 
 

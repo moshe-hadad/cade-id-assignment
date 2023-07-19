@@ -98,7 +98,7 @@ def case_id_mapping():
 def po_from_html(body_text: str):
     if not (isinstance(body_text, str) and body_text):
         return None
-    soup = BeautifulSoup(body_text)
+    soup = BeautifulSoup(body_text,'html.parser')
     po = soup.strong.text if soup.strong else None
     return po
 

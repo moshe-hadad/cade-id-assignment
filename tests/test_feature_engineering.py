@@ -79,3 +79,19 @@ def test_feature_engineering():
     expected = expected_results(data=data, indices=indices)
 
     assert_frame_equal(actual, expected)
+
+
+def test__merge_dict():
+    dict1 = {'BusinessActivity': 'CreatePurchaseRequest', 'InstanceNumber': 1, 'partner_id': 3}
+    dict2 = {'BusinessActivity': 'CreatePurchaseRequest', 'InstanceNumber': 2, 'partner_id': 4, 'user_id': 10}
+    dict3 = {'BusinessActivity': 'CreatePurchaseRequest', 'InstanceNumber': 3, 'user_id': 12}
+    dict4 = {'BusinessActivity': 'CreatePurchaseRequest', 'InstanceNumber': 4, 'partner_id': 6, 'user_id': 18}
+    parsed_data = [dict1, dict2, dict3, dict4]
+    actual = features_eng._merge_dict(parsed_data)
+    expected = {'BusinessActivity': ['CreatePurchaseRequest', 'CreatePurchaseRequest', 'CreatePurchaseRequest',
+                                     'CreatePurchaseRequest'],
+                'InstanceNumber': [1, 2, 3, 4],
+                'partner_id': [3, 4, np.nan, 6],
+                'user_id': [np.nan, 10, 12, 18]
+                }
+    assert actual == expected
