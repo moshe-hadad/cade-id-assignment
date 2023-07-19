@@ -147,7 +147,7 @@ def pre_processing_data(isolated_data_set: pd.DataFrame, interleaved_data_set: p
 
 PRE_PROCESS = False
 FEATURE_ENGINEERING = False
-IMPUTING = True
+IMPUTING = False
 
 if __name__ == '__main__':
     # ---------------  Load data sets ---------------- #
@@ -172,20 +172,31 @@ if __name__ == '__main__':
                                                          impute=IMPUTING)
 
     # Selecting features based on correlation
-    list_of_features = selector.simple_correlation_selector(isolated_df_processed, target_column='InstanceNumber',
-                                                            threshold=0.95)
+    list_of_features = selector.simple_correlation_selector(isolated_df_imputed, target_column='InstanceNumber',
+                                                            threshold=0.90)
+
+    # shared_columns = list(set(isolated_df_engineered.columns).intersection(set(list_of_features)))
+    # isolated_missing_percentage_before = util.missing_data_percentage(isolated_df_engineered[shared_columns])
+    # interleaved_missing_percentage_before = util.missing_data_percentage(interleaved_df_engineered[shared_columns])
+    #
+    # isolated_missing_percentage_after = util.missing_data_percentage(isolated_df_imputed[shared_columns])
+    # interleaved_missing_percentage_after = util.missing_data_percentage(interleaved_df_imputed[shared_columns])
+    #
+    # print('*** Missing percentage before and after ***')
+    # print(f'Isolated :before:{isolated_missing_percentage_before}, after:{isolated_missing_percentage_after}')
+    # print(
+    #     f'Interleaved :before:{interleaved_missing_percentage_before}, after:{interleaved_missing_percentage_after}')
+    # print('*' * 50)
+
     print(list_of_features)
     # # Impute data on the interleaved data set
-    # # todo work on the imputing module
-    # interleaved_df_processed = imputer.impute(data_set=interleaved_df_processed, method='')
-    #
+
+    filtered_df = interleaved_df_imputed[list_of_features]
     # Cluster values into groups
-    # todo work on the clustering module
-    # interleaved_df_imputed = util.load_data_set(
-    #     file_path=os.path.join('../../processed_data', 'interleaved_df_imputed.csv'))
-    # # impute features values from MessageAttributes
-    # clusters = clustering.cluster(data_set=interleaved_df_imputed)
-    #
+    clusters = clustering.cluster(data_set=filtered_df)
+    print(clusters)
+    print(len(clusters))
+
     # # Assign case id
     # # todo work on the assigner module
     # results_data_set = case_id_assigner.assigne_case_id(data_set=interleaved_df_processed, clusters=clusters)

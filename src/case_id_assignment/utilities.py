@@ -98,7 +98,7 @@ def case_id_mapping():
 def po_from_html(body_text: str):
     if not (isinstance(body_text, str) and body_text):
         return None
-    soup = BeautifulSoup(body_text,'html.parser')
+    soup = BeautifulSoup(body_text, 'html.parser')
     po = soup.strong.text if soup.strong else None
     return po
 
@@ -111,3 +111,11 @@ def is_nan(model):
         return not model
 
     return np.isnan(model)
+
+
+def missing_data_percentage(data_set: pd.DataFrame) -> float:
+    data_set = data_set.replace(r'^\s*$', np.nan, regex=True)
+    rows, columns = data_set.shape
+    total = rows * columns
+    missing = data_set.isna().sum().sum()
+    return missing / total
