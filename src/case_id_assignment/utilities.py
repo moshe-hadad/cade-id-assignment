@@ -1,5 +1,6 @@
 """This module contains utility functions which serve other modules
 """
+import itertools
 import operator
 import os.path
 
@@ -7,6 +8,7 @@ import numpy as np
 import pandas as pd
 import simplejson
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 first_item = operator.itemgetter(0)
 
@@ -119,3 +121,24 @@ def missing_data_percentage(data_set: pd.DataFrame) -> float:
     total = rows * columns
     missing = data_set.isna().sum().sum()
     return missing / total
+
+
+def _are_similar(data_set: pd.DataFrame, col1: str, col2: str) -> bool:
+    col1_values = unique_values(data_set, col1)
+    col2_values = unique_values(data_set, col2)
+    are_similar = set(col1_values) == set(col2_values)
+    return are_similar
+
+
+def unique_values(data_set: pd.DataFrame, column: str):
+    return data_set[data_set[column].notnull()][column].unique()
+
+
+def columns_with_similar_values(data_set: pd.DataFrame, skip_columns: set[str]):
+    data_set = data_set.replace(r'^\s*$', np.nan, regex=True)
+    columns = [column for column in data_set.columns if column not in skip_columns]
+    columns_pairs = itertools.combinations(columns, 2)
+    desc = 'Searching for columns with similar values'
+    similar_columns = [(col1, col2) for col1, col2 in tqdm(columns_pairs, desc=desc) if
+                       _are_similar(data_set, col1, col2)]
+    return similar_columns

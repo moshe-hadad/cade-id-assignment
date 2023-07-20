@@ -49,6 +49,5 @@ def simple_correlation_selector(data_set: pd.DataFrame, target_column: str, thre
         correlation[column] = (number_of_values, corr_number)
     # pprint(correlation)
     mean = math.floor(statistics.mean(counts))
-    print(mean)
     filtered = _filter_features(correlation, threshold, count_threshold=mean)
     return filtered

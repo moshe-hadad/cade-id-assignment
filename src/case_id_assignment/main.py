@@ -32,6 +32,8 @@ def impute(isolated_data_set_engineered: pd.DataFrame, interleaved_data_set_engi
     interleaved_df_imputed_name = 'interleaved_df_imputed'
     if impute:
         columns = ['subject', 'origin', 'res_name', 'datas_fname']
+        columns_with_similar_values = util.columns_with_similar_values(interleaved_data_set_engineered,
+                                                                       skip_columns={'file_data'})
         impute_pipeline = Pipeline(steps=[
             ('tableimputer', imputer.ImputeFromTable()),
             ('filedata_imputer', imputer.ImputeFromFileData()),
@@ -95,7 +97,7 @@ def engineer_features(isolated_df_processed: pd.DataFrame, interleaved_df_proces
 
 
 def _str_to_nan(data_set):
-    """Conver empty strings or NULL strings into np.nan"""
+    """Convert empty strings or NULL strings into np.nan """
     return data_set.replace('', np.nan).replace('NULL', np.nan).replace(' NULL',
                                                                         np.nan)
 
@@ -147,7 +149,7 @@ def pre_processing_data(isolated_data_set: pd.DataFrame, interleaved_data_set: p
 
 PRE_PROCESS = False
 FEATURE_ENGINEERING = False
-IMPUTING = False
+IMPUTING = True
 
 if __name__ == '__main__':
     # ---------------  Load data sets ---------------- #

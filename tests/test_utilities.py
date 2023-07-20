@@ -29,3 +29,17 @@ def test_missing_data_percentage():
     })
     actual = util.missing_data_percentage(data)
     assert actual == 0.2
+
+
+def test_columns_with_similar_values():
+    data = pd.DataFrame(data={
+        'A': [1, 2, 2, 4, 5],
+        'B': ['A', 'B', '', 'C', 'B'],
+        'C': [4, 2, np.nan, 1, 5],
+        'D': ['B', 'B', np.nan, 'C', 'A'],
+        'file_data': [[1, 2, 3], [8, 5, 4], [6, 5, 4], [7, 8, 9], [7, 8, 9]]
+    })
+    actual = util.columns_with_similar_values(data_set=data, skip_columns={'file_data'})
+    expected = [('A', 'C'), ('B', 'D')]
+
+    assert actual == expected
