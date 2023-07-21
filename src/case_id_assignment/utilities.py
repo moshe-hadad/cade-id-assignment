@@ -126,19 +126,32 @@ def missing_data_percentage(data_set: pd.DataFrame) -> float:
 def _are_similar(data_set: pd.DataFrame, col1: str, col2: str) -> bool:
     col1_values = unique_values(data_set, col1)
     col2_values = unique_values(data_set, col2)
-    are_similar = set(col1_values) == set(col2_values)
+    are_similar = np.array_equal(col1_values, col2_values)
     return are_similar
 
 
 def unique_values(data_set: pd.DataFrame, column: str):
-    return data_set[data_set[column].notnull()][column].unique()
+    return np.unique(data_set[data_set[column].notnull()][column])
 
 
 def columns_with_similar_values(data_set: pd.DataFrame, skip_columns: set[str]):
     data_set = data_set.replace(r'^\s*$', np.nan, regex=True)
     columns = [column for column in data_set.columns if column not in skip_columns]
-    columns_pairs = itertools.combinations(columns, 2)
+    columns_pairs = list(itertools.combinations(columns, 2))
     desc = 'Searching for columns with similar values'
     similar_columns = [(col1, col2) for col1, col2 in tqdm(columns_pairs, desc=desc) if
                        _are_similar(data_set, col1, col2)]
     return similar_columns
+
+# shared_columns = list(set(isolated_df_engineered.columns).intersection(set(list_of_features)))
+# isolated_missing_percentage_before = util.missing_data_percentage(isolated_df_engineered[shared_columns])
+# interleaved_missing_percentage_before = util.missing_data_percentage(interleaved_df_engineered[shared_columns])
+#
+# isolated_missing_percentage_after = util.missing_data_percentage(isolated_df_imputed[shared_columns])
+# interleaved_missing_percentage_after = util.missing_data_percentage(interleaved_df_imputed[shared_columns])
+#
+# print('*** Missing percentage before and after ***')
+# print(f'Isolated :before:{isolated_missing_percentage_before}, after:{isolated_missing_percentage_after}')
+# print(
+#     f'Interleaved :before:{interleaved_missing_percentage_before}, after:{interleaved_missing_percentage_after}')
+# print('*' * 50)

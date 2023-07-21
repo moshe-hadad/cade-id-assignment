@@ -77,8 +77,8 @@ class Imputer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        print(f'Impute values from {self.func.__name__}')
-        for index, items in tqdm(self.to_fill.items()):
+        items = list(self.to_fill.items())  # convert from iterator to list so the progress bar will show a bar
+        for index, items in tqdm(items, desc=f'Impute values from {self.func.__name__}'):
             columns = list(items.keys())
             values = list(items.values())
             values = [_try_convert_to_int(value) for value in values]

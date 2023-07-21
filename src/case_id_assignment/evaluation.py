@@ -4,6 +4,8 @@ import case_id_assignment.utilities as util
 
 
 def _to_int(value):
+    if value == 'set()':
+        return 0
     return int(value.replace('{', '').replace('}', ''))
 
 
