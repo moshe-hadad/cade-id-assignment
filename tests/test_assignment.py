@@ -36,8 +36,28 @@ def test_assign_case_id():
     results_data_set = assign.assign_case_id(data_set=data_set, attributes=list_of_features,
                                              clusters=clusters)
     assert 'case_id' in results_data_set.columns
-    assert results_data_set['CaseIDVoting'][0] == '{0}'
-    assert results_data_set['CaseIDVoting'][1] == '{2}'
-    assert results_data_set['CaseIDVoting'][2] == '{0}'
-    assert results_data_set['CaseIDVoting'][3] == '{0}'
-    assert results_data_set['CaseIDVoting'][4] == '{1}'
+    assert results_data_set['case_id'][0] == '{0}'
+    assert results_data_set['case_id'][1] == '{2}'
+    assert results_data_set['case_id'][2] == '{0}'
+    assert results_data_set['case_id'][3] == '{0}'
+    assert results_data_set['case_id'][4] == '{1}'
+
+
+def test_vote_case_id():
+    data_set = pd.DataFrame({
+        'sale_order_line_id': [399, 404, 400, 399, 401, 402, 401, 399, 403, 400, 403, 403, 405],
+        'purchase_order_id': [980, 986, 981, 978, 979, 981, 983, 980, 982, 981, 984, 983, 985],
+        'real_activity_action': ['Activity Start', 'NoAction', 'Activity Start', 'NoAction', 'NoAction', 'Activity End',
+                                 'NoAction', 'NoAction', 'Activity End', 'Activity Start', 'NoAction', 'NoAction',
+                                 'Activity End'],
+        'case_id': ['set()', '{1}', '{2,1}', '{2}', 'set()', 'set()', 'set()', '{3}', 'set()', 'set()', '{4,5}', '{5}',
+                    'set()']
+    })
+    results_data_set = assign.assign_case_id_to_activity_action(data_set=data_set)
+    assert 'CaseIDVoting' in results_data_set.columns
+    assert results_data_set['CaseIDVoting'][0] == '{1}'
+    assert results_data_set['CaseIDVoting'][2] == '{2}'
+    assert results_data_set['CaseIDVoting'][5] == '{2}'
+    assert results_data_set['CaseIDVoting'][8] == '{3}'
+    assert results_data_set['CaseIDVoting'][9] == '{4}'
+    assert results_data_set['CaseIDVoting'][12] == '{5}'

@@ -188,8 +188,8 @@ if __name__ == '__main__':
     # Assign case id
     results_data_set = case_id_assigner.assign_case_id(data_set=interleaved_df_imputed, attributes=list_of_features,
                                                        clusters=clusters)
-    # results_data_set = case_id_assigner.vote_case_id(data_set=interleaved_df_imputed)
-    # util.save_data_set(data_set=results_data_set, data_folder='../../processed_data', file_name='final_results.csv')
+    results_data_set = case_id_assigner.assign_case_id_to_activity_action(data_set=interleaved_df_imputed)
+    util.save_data_set(data_set=results_data_set, data_folder='../../processed_data', file_name='final_results.csv')
 
     # Evaluate the case id assignment
     result = evaluation.evaluate_case_id_accuracy(data_set=results_data_set)
