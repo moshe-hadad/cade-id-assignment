@@ -56,7 +56,7 @@ def test_vote_case_id():
     results_data_set = assign.assign_case_id_to_activity_action(data_set=data_set)
     assert 'CaseIDVoting' in results_data_set.columns
     assert results_data_set['CaseIDVoting'][0] == '{1}'
-    assert results_data_set['CaseIDVoting'][2] == '{2}'
+    assert results_data_set['CaseIDVoting'][2] == '{1}'
     assert results_data_set['CaseIDVoting'][5] == '{2}'
     assert results_data_set['CaseIDVoting'][8] == '{3}'
     assert results_data_set['CaseIDVoting'][9] == '{4}'

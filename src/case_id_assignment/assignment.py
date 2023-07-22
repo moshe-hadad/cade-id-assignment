@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+import numpy as np
 import pandas as pd
 import case_id_assignment.utilities as util
 from tqdm.auto import tqdm
@@ -41,8 +42,16 @@ def assign_case_id(data_set: pd.DataFrame, attributes: list[str], clusters: list
     return data_set
 
 
+def _next_index(data_set, index):
+    loc = data_set.index[data_set.index == index].values[0]
+    next_index = index if loc == len(data_set.index) - 1 else data_set.index[loc + 1]
+    return next_index
+
+
 def _closest_case_id_from_forward(data_set, index):
+    # next_index = _next_index(data_set, index)
     filtered = data_set[index:]
+    filtered['case_id'] = filtered['case_id'].replace('set()', None)
     case_id_index = filtered[filtered['case_id'].notnull()].first_valid_index()
     case_id = _get_case_id_by_index(data_set=filtered, case_id_index=case_id_index)
     return case_id
@@ -50,15 +59,16 @@ def _closest_case_id_from_forward(data_set, index):
 
 def _closest_case_id_from_backwards(data_set, index):
     filtered = data_set[:index]
+    filtered['case_id'] = filtered['case_id'].replace('set()', None)
     case_id_index = filtered[filtered['case_id'].notnull()].last_valid_index()
     case_id = _get_case_id_by_index(data_set=filtered, case_id_index=case_id_index)
     return case_id
 
 
 def _get_case_id_by_index(data_set, case_id_index):
-    case_ids = data_set['case_id'].iloc[case_id_index]
+    case_ids = data_set['case_id'].loc[case_id_index]
     case_ids = eval(case_ids)
-    case_id = util.first_item(list(case_ids))
+    case_id = case_ids.pop()
     return case_id
 
 
@@ -72,8 +82,8 @@ def closest_case_id(data_set):
         # If activity action is Activity Start or Activity End
         case_ids = eval(case_ids)
         if case_ids:  # if it's already assigned with a case id, if there is more than one value, we return the first
-            case_id = util.first_item(case_ids) if len(case_ids) > 1 else case_ids
-            return f'{case_id}'
+            case_id = case_ids.pop()
+            return str({case_id})
 
         # If activity action is not assigned with a case id, borrow one from the closes case id
         if activity_action == 'Activity Start':
@@ -81,7 +91,7 @@ def closest_case_id(data_set):
         else:
             case_id = _closest_case_id_from_backwards(data_set, row.name)
 
-        return f'{case_id}'
+        return str({case_id})
 
     return assign
 

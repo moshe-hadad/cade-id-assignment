@@ -1,0 +1,5 @@
+,0
+frame.number,int64
+real_case_id,float64
+CaseIDVoting,object
+real_activity_action,object

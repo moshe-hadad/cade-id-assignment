@@ -43,3 +43,10 @@ def test_columns_with_similar_values():
     expected = [('A', 'C'), ('B', 'D')]
 
     assert actual == expected
+
+#
+# def test_fix_benchmark():
+#     benchmark = util.load_data_set('../processed_data/benchmark.csv')
+#     final = util.load_data_set('../processed_data/final_results.csv')
+#     benchmark['real_activity_action'] = final['real_activity_action']
+#     util.save_data_set(data_set=benchmark, data_folder='../processed_data', file_name='benchmark.csv')

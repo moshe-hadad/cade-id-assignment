@@ -21,8 +21,9 @@ def evaluate_case_id_accuracy(data_set):
     data_set[case_id_mapping_column] = data_set[real_case_id_column].map(util.case_id_mapping())
     # case_id_data_set = data_set[data_set[real_case_id_column] != '']
 
-    labels_true = _non_null_value(data_set=data_set, column=case_id_mapping_column)
-    labels_pred = _non_null_value(data_set=data_set, column=predicted_case_id_column)
+    filtered = data_set[data_set['real_activity_action'] != 'NoAction']
+    labels_true = _non_null_value(data_set=filtered, column=case_id_mapping_column)
+    labels_pred = _non_null_value(data_set=filtered, column=predicted_case_id_column)
 
     result = metrics.normalized_mutual_info_score(labels_true, labels_pred)
     return result
