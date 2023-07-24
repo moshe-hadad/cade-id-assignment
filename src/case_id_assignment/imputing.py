@@ -1,3 +1,4 @@
+import itertools
 import operator
 from collections import defaultdict
 
@@ -225,3 +226,40 @@ def extract_po_from_res_id(row):
 class ImputeFromRes(Imputer):
     def __init__(self):
         super().__init__(extract_po_from_res_id)
+
+
+class ImputeFromStreamIndex(BaseEstimator, TransformerMixin):
+    def fit(self):
+        return self
+
+    def fit_transform(self, X, y=None, **fit_params):
+        filtered_ds = X[X['HighestLayerProtocol'] == 'http']
+        X = self._sync_on_stream_index(data_set=X, filtered_ds=filtered_ds)
+        return X
+
+    def _sync_on_stream_index(self, data_set, filtered_ds):
+        excluded = {'file_data', 'stream_index'}
+        columns = list(column for column in data_set.columns if column not in excluded)
+        for stream_index in filtered_ds['stream_index'].unique():
+            filtered = filtered_ds[filtered_ds['stream_index'] == stream_index]
+            data_set.update(filtered[columns].ffill().bfill())
+        return data_set
+
+
+class ImputeFromSimilarColumns(BaseEstimator, TransformerMixin):
+    def __init__(self, similar_columns: list[tuple[str, str]]) -> None:
+        self._similar_columns = similar_columns
+
+    def fit(self):
+        return self
+
+    def fit_transform(self, X, y=None, **fit_params):
+        return self._fill_missing_values(data_set=X)
+
+    def _fill_missing_values(self, data_set):
+        for collection_of_columns in self._similar_columns:
+            for first_column, second_column in itertools.permutations(collection_of_columns, 2):
+                data_set[first_column] = data_set[first_column].fillna(data_set[second_column])
+                # data_set[second_column] = data_set[second_column].fillna(data_set[first_column])
+
+        return data_set

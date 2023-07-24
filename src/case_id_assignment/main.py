@@ -25,7 +25,7 @@ def impute(isolated_data_set_engineered: pd.DataFrame, interleaved_data_set_engi
     :param save_results: If ture, the resulted data sets will be saved to the processed_data folder.
     :param impute: If True, the imputing stage will be performed on the data sets. If False the function will try to
     load and return the imputed data sets from the processed_data folder.
-    :return:
+    :return: isolated data set  and interleaved data set after imputing
     """
     processed_data_folder = '../../processed_data'
     isolated_df_imputed_name = 'isolated_df_imputed'
@@ -39,7 +39,8 @@ def impute(isolated_data_set_engineered: pd.DataFrame, interleaved_data_set_engi
             ('filedata_imputer', imputer.ImputeFromFileData()),
             ('html_imputer', imputer.ImputeFromHtml()),
             ('po_imputer', imputer.ImputePO(columns)),
-            ('res_imputer', imputer.ImputeFromRes())
+            ('res_imputer', imputer.ImputeFromRes()),
+            ('similar_coslumns', imputer.ImputeFromSimilarColumns(columns_with_similar_values))
         ])
         isolated_df_imputed = impute_pipeline.fit_transform(isolated_data_set_engineered)
         interleaved_df_imputed = impute_pipeline.fit_transform(interleaved_data_set_engineered)
@@ -149,7 +150,7 @@ def pre_processing_data(isolated_data_set: pd.DataFrame, interleaved_data_set: p
 
 PRE_PROCESS = False
 FEATURE_ENGINEERING = False
-IMPUTING = False
+IMPUTING = True
 
 if __name__ == '__main__':
     # ---------------  Load data sets ---------------- #

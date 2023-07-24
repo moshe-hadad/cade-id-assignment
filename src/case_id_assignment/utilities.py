@@ -3,6 +3,7 @@
 import itertools
 import operator
 import os.path
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -134,14 +135,23 @@ def unique_values(data_set: pd.DataFrame, column: str):
     return np.unique(data_set[data_set[column].notnull()][column])
 
 
-def columns_with_similar_values(data_set: pd.DataFrame, skip_columns: set[str]):
+def _values(data_set, col):
+    values = unique_values(data_set=data_set, column=col)
+    values = tuple(values)
+    return values
+
+
+def columns_with_similar_values(data_set: pd.DataFrame, skip_columns: set[str]) -> list[tuple[str, str]]:
     data_set = data_set.replace(r'^\s*$', np.nan, regex=True)
     columns = [column for column in data_set.columns if column not in skip_columns]
-    columns_pairs = list(itertools.combinations(columns, 2))
-    desc = 'Searching for columns with similar values'
-    similar_columns = [(col1, col2) for col1, col2 in tqdm(columns_pairs, desc=desc) if
-                       _are_similar(data_set, col1, col2)]
-    return similar_columns
+    columns_collection = defaultdict(list)
+    [columns_collection[_values(data_set, col)].append(col) for col in columns]
+
+    # columns_pairs = list(itertools.combinations(columns, 2))
+    # desc = 'Searching for columns with similar values'
+    # similar_columns = [(col1, col2) for col1, col2 in tqdm(columns_pairs, desc=desc) if
+    #                    _are_similar(data_set, col1, col2)]
+    return list(columns_collection.values())
 
 # shared_columns = list(set(isolated_df_engineered.columns).intersection(set(list_of_features)))
 # isolated_missing_percentage_before = util.missing_data_percentage(isolated_df_engineered[shared_columns])

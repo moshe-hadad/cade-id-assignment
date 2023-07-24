@@ -20,8 +20,9 @@ def _input_sample_data():
     return results
 
 
-def _impute_from_table_data(inputer_class=imp.ImputeFromTable()):
-    sample_data = tu.load_sample_data(file_name='sample_for_imputing.csv')
+def _impute_(sample_data=None, inputer_class=imp.ImputeFromTable()):
+    sample_data = sample_data if isinstance(sample_data, pd.DataFrame) else tu.load_sample_data(
+        file_name='sample_for_imputing.csv')
     pipeline = Pipeline(steps=[
         ('inputter', inputer_class)
     ])
@@ -137,7 +138,7 @@ def test_impute_purchase_order_create():
 
 
 def test_impute_from_table():
-    results = _impute_from_table_data()
+    results = _impute_()
     data = {'sale_order_id': [94., 94., 94., 94.]}
     indices = [11., 12., 13., 14.]
 
@@ -167,7 +168,7 @@ def test_extract_po_from_html():
 
 
 def test_impute_from_html():
-    results = _impute_from_table_data(inputer_class=imp.ImputeFromHtml())
+    results = _impute_(inputer_class=imp.ImputeFromHtml())
     data = {'purchase_order_id': [156., 156.]}
     indices = [25926., 25927.]
 
@@ -201,7 +202,7 @@ def assert_to_numeric(po_body, po_html):
 
 def test_impute_po():
     columns = ['subject', 'origin', 'res_name', 'datas_fname']
-    results = _impute_from_table_data(inputer_class=imp.ImputePO(columns))
+    results = _impute_(inputer_class=imp.ImputePO(columns))
     data = {'purchase_order_id': [152., 153., 153., 158., 152.]}
     indices = [25928, 25929, 25932, 25933, 25934]
 
@@ -212,7 +213,7 @@ def test_impute_po():
 
 
 def test_impute_from_res_id():
-    results = _impute_from_table_data(inputer_class=imp.ImputeFromRes())
+    results = _impute_(inputer_class=imp.ImputeFromRes())
     data = {'purchase_order_id': [156., np.nan], 'sale_order_id': [np.nan, 94.]}
     indices = [25930, 25931]
 
@@ -228,3 +229,45 @@ def test__clean_po_str():
 
     actual = imp._clean_po_str('PO_PO00152.pdf')
     assert actual == '00152'
+
+
+def test_impute_from_stream_index():
+    data_set = pd.DataFrame({
+        'stream_index': [1, 1, 2, 3, 4, 3, 3, 8, 8, 8],
+        'HighestLayerProtocol': ['http', 'http', 'pgsql', 'http', 'http', 'http', 'http', 'pgsql', 'pgsql', 'pgsql'],
+        'sale_order_line_id': [375, np.nan, np.nan, 376, np.nan, np.nan, np.nan, np.nan, np.nan, 399],
+        'order_line_id': [np.nan, 378, np.nan, np.nan, 376, 376, np.nan, np.nan, np.nan, 566],
+    })
+    actual = _impute_(sample_data=data_set, inputer_class=imp.ImputeFromStreamIndex())
+
+    expected = pd.DataFrame({
+        'stream_index': [1, 1, 2, 3, 4, 3, 3, 8, 8, 8],
+        'HighestLayerProtocol': ['http', 'http', 'pgsql', 'http', 'http', 'http', 'http', 'pgsql', 'pgsql', 'pgsql'],
+        'sale_order_line_id': [375, 375, np.nan, 376, np.nan, 376, 376, np.nan, np.nan, 399],
+        'order_line_id': [378, 378, np.nan, 376, 376, 376, 376, np.nan, np.nan, 566],
+    })
+    assert_frame_equal(actual, expected)
+
+
+def test_impute_from_similar_columns():
+    data_set = pd.DataFrame({
+        'attachment': ['PO00978', np.nan, 'PO00979', 'PO00980', 'PO00981', 'PO00978', np.nan, 'PO00981'],
+        'HighestLayerProtocol': [np.nan, 'PO00979', np.nan, 'PO00980', 'PO00981', np.nan, 'PO00978', np.nan],
+        'sale_order_id': [np.nan, np.nan, 375, np.nan, 376, np.nan, 375, 378],
+        'sale_order_line_id': [375, np.nan, np.nan, 376, np.nan, 378, np.nan, np.nan],
+        'order_line_id': [np.nan, 378, np.nan, np.nan, 376, 378, 375, np.nan],
+    })
+
+    columns_with_similar_values = util.columns_with_similar_values(data_set, skip_columns=set())
+    actual = _impute_(sample_data=data_set, inputer_class=imp.ImputeFromSimilarColumns(columns_with_similar_values))
+
+    expected = pd.DataFrame({
+        'attachment': ['PO00978', 'PO00979', 'PO00979', 'PO00980', 'PO00981', 'PO00978', 'PO00978', 'PO00981'],
+        'HighestLayerProtocol': ['PO00978', 'PO00979', 'PO00979', 'PO00980', 'PO00981', 'PO00978', 'PO00978',
+                                 'PO00981'],
+        'sale_order_id': [375., 378., 375., 376., 376., 378., 375., 378.],
+        'sale_order_line_id': [375., 378., 375., 376., 376., 378., 375., 378.],
+        'order_line_id': [375., 378., 375., 376., 376., 378., 375., 378.],
+    })
+
+    assert_frame_equal(actual, expected)

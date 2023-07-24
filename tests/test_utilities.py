@@ -37,10 +37,11 @@ def test_columns_with_similar_values():
         'B': ['A', 'B', '', 'C', 'B'],
         'C': [4, 2, np.nan, 1, 5],
         'D': ['B', 'B', np.nan, 'C', 'A'],
+        'E': ['C', 'A', np.nan, 'B', 'A'],
         'file_data': [[1, 2, 3], [8, 5, 4], [6, 5, 4], [7, 8, 9], [7, 8, 9]]
     })
     actual = util.columns_with_similar_values(data_set=data, skip_columns={'file_data'})
-    expected = [('A', 'C'), ('B', 'D')]
+    expected = [['A', 'C'], ['B', 'D', 'E']]
 
     assert actual == expected
 
