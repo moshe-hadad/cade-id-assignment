@@ -13,12 +13,12 @@ MessageType,object
 MessageAttributes,object
 query_type,object
 session_class,object
-filter_flag,bool
+filter_flag,object
 query,object
 tables,object
 event,object
 event_with_roles,object
-noise_event,bool
+noise_event,object
 real_activity,object
 real_activity_action,object
 real_case_id,float64

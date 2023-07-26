@@ -238,7 +238,7 @@ def test_impute_from_stream_index():
         'sale_order_line_id': [375, np.nan, np.nan, 376, np.nan, np.nan, np.nan, np.nan, np.nan, 399],
         'order_line_id': [np.nan, 378, np.nan, np.nan, 376, 376, np.nan, np.nan, np.nan, 566],
     })
-    actual = _impute_(sample_data=data_set, inputer_class=imp.ImputeFromStreamIndex())
+    actual = _impute_(sample_data=data_set, inputer_class=imp.ImputeFromStreamIndexHTTP())
 
     expected = pd.DataFrame({
         'stream_index': [1, 1, 2, 3, 4, 3, 3, 8, 8, 8],
@@ -256,10 +256,10 @@ def test_impute_from_similar_columns():
         'sale_order_id': [np.nan, np.nan, 375, np.nan, 376, np.nan, 375, 378],
         'sale_order_line_id': [375, np.nan, np.nan, 376, np.nan, 378, np.nan, np.nan],
         'order_line_id': [np.nan, 378, np.nan, np.nan, 376, 378, 375, np.nan],
+        'test_mix': [np.nan, '378', np.nan, np.nan, '376', '378', 375, np.nan],
     })
 
-    columns_with_similar_values = util.columns_with_similar_values(data_set, skip_columns=set())
-    actual = _impute_(sample_data=data_set, inputer_class=imp.ImputeFromSimilarColumns(columns_with_similar_values))
+    actual = _impute_(sample_data=data_set, inputer_class=imp.ImputeFromSimilarColumns())
 
     expected = pd.DataFrame({
         'attachment': ['PO00978', 'PO00979', 'PO00979', 'PO00980', 'PO00981', 'PO00978', 'PO00978', 'PO00981'],
@@ -268,6 +268,7 @@ def test_impute_from_similar_columns():
         'sale_order_id': [375., 378., 375., 376., 376., 378., 375., 378.],
         'sale_order_line_id': [375., 378., 375., 376., 376., 378., 375., 378.],
         'order_line_id': [375., 378., 375., 376., 376., 378., 375., 378.],
+        'test_mix': [np.nan, '378', np.nan, np.nan, '376', '378', 375, np.nan],
     })
 
     assert_frame_equal(actual, expected)

@@ -32,18 +32,24 @@ def impute(isolated_data_set_engineered: pd.DataFrame, interleaved_data_set_engi
     interleaved_df_imputed_name = 'interleaved_df_imputed'
     if impute:
         columns = ['subject', 'origin', 'res_name', 'datas_fname']
-        columns_with_similar_values = util.columns_with_similar_values(interleaved_data_set_engineered,
-                                                                       skip_columns={'file_data'})
+
+
         impute_pipeline = Pipeline(steps=[
             ('tableimputer', imputer.ImputeFromTable()),
             ('filedata_imputer', imputer.ImputeFromFileData()),
             ('html_imputer', imputer.ImputeFromHtml()),
             ('po_imputer', imputer.ImputePO(columns)),
             ('res_imputer', imputer.ImputeFromRes()),
-            ('similar_coslumns', imputer.ImputeFromSimilarColumns(columns_with_similar_values))
-        ])
+            ('similar_columns_imputer', imputer.ImputeFromSimilarColumns())])
+
         isolated_df_imputed = impute_pipeline.fit_transform(isolated_data_set_engineered)
         interleaved_df_imputed = impute_pipeline.fit_transform(interleaved_data_set_engineered)
+
+
+
+        stream_index_pipeline = Pipeline(steps=[(('stream_index_http_imputer', imputer.ImputeFromStreamIndexHTTP()))])
+        interleaved_df_imputed = stream_index_pipeline.fit_transform(interleaved_df_imputed)
+
         if save_results:
             util.save_data_set(data_set=isolated_df_imputed, data_folder='../../processed_data',
                                file_name=isolated_df_imputed_name)

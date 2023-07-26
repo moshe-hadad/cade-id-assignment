@@ -228,11 +228,11 @@ class ImputeFromRes(Imputer):
         super().__init__(extract_po_from_res_id)
 
 
-class ImputeFromStreamIndex(BaseEstimator, TransformerMixin):
-    def fit(self):
+class ImputeFromStreamIndexHTTP(BaseEstimator, TransformerMixin):
+    def fit(self, X, y=None):
         return self
 
-    def fit_transform(self, X, y=None, **fit_params):
+    def transform(self, X, y=None, **fit_params):
         filtered_ds = X[X['HighestLayerProtocol'] == 'http']
         X = self._sync_on_stream_index(data_set=X, filtered_ds=filtered_ds)
         return X
@@ -247,19 +247,21 @@ class ImputeFromStreamIndex(BaseEstimator, TransformerMixin):
 
 
 class ImputeFromSimilarColumns(BaseEstimator, TransformerMixin):
-    def __init__(self, similar_columns: list[tuple[str, str]]) -> None:
-        self._similar_columns = similar_columns
+    def __init__(self):
+        self.list_of_columns = None
 
-    def fit(self):
+    def fit(self, X, y=None):
+        columns_with_similar_values = util.columns_with_similar_values(X,
+                                                                       skip_columns={'file_data','real_case_id'})
+        self.list_of_columns = columns_with_similar_values
         return self
 
-    def fit_transform(self, X, y=None, **fit_params):
+    def transform(self, X, y=None, **fit_params):
         return self._fill_missing_values(data_set=X)
 
     def _fill_missing_values(self, data_set):
-        for collection_of_columns in self._similar_columns:
+        for collection_of_columns in self.list_of_columns:
             for first_column, second_column in itertools.permutations(collection_of_columns, 2):
                 data_set[first_column] = data_set[first_column].fillna(data_set[second_column])
-                # data_set[second_column] = data_set[second_column].fillna(data_set[first_column])
 
         return data_set
