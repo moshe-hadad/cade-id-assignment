@@ -252,7 +252,7 @@ class ImputeFromSimilarColumns(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
         columns_with_similar_values = util.columns_with_similar_values(X,
-                                                                       skip_columns={'file_data','real_case_id'})
+                                                                       skip_columns={'file_data', 'real_case_id'})
         self.list_of_columns = columns_with_similar_values
         return self
 
@@ -265,3 +265,59 @@ class ImputeFromSimilarColumns(BaseEstimator, TransformerMixin):
                 data_set[first_column] = data_set[first_column].fillna(data_set[second_column])
 
         return data_set
+
+
+def _extreact_from_request_method(data_set):
+    def extract_request_method_for_impute(row):
+        request_method_call, starting_frame_number, frame_number, attribute_name = row[[
+            'request_method_call', 'starting_frame_number', 'frame.number', 'attribute_name']]
+        value = None
+
+        if request_method_call == 'execute_kw':
+            request_method_call_column = data_set[data_set['starting_frame_number'] == str(frame_number)][
+                'request_method_call']
+            value = None if request_method_call_column.empty else request_method_call_column.iloc[0]
+            value = value if value and value.isnumeric() else None
+
+
+        elif isinstance(request_method_call, str) and request_method_call.isnumeric() and isinstance(
+                starting_frame_number, str):
+            attribute_column = data_set[data_set['frame.number'] == int(starting_frame_number)]['attribute_name']
+            attribute_name = None if attribute_column.empty else attribute_column.iloc[0]
+            value = request_method_call
+
+        return {attribute_name: float(value)} if attribute_name and value else None
+
+    return extract_request_method_for_impute
+
+
+attribute_name = operator.itemgetter(4)
+
+
+def _extract_attribute_name(value: str):
+    return f'{attribute_name(value)}_id'.replace('.', '_') if len(
+        value) > 4 else None
+
+
+class ImputeFromRequestMethodCall(Imputer):
+    def __init__(self):
+        super().__init__(func=_extreact_from_request_method)
+
+    def fit(self, X, y=None):
+        tqdm.pandas(desc=f'Collect values to imputer: ImputeFromRequestMethodCall')
+        X['attribute_name'] = X['file_data'].progress_apply(_extract_attribute_name)
+        results = X.progress_apply(_extreact_from_request_method(X), axis=1)
+        self.to_fill = results[results.notnull()]
+        del X['attribute_name']
+        return self
+
+
+# class ImputeFromSimilarRows(BaseEstimator, TransformerMixin):
+#     def __init__(self, columns):
+#         self.columns = columns
+#
+#     def fit(self, X, y=None):
+#         return self
+#
+#     def transform(self, X, y=None, **fit_params):
+#         return X

@@ -178,15 +178,6 @@ def test_impute_from_html():
     assert_frame_equal(actual, expected)
 
 
-# def test_create_another_file():
-#     df = util.load_data_set('../processed_data/interleaved_df_imputed.csv' '',)
-#     new_df = df[:200]
-#     util.save_data_set(data_set=new_df, data_folder='../data_for_tests', file_name='interleaved_stream_index_imputing.csv')
-
-
-# def test_fix_index():
-#     sfi = util.load_data_set('./data_for_tests/sample_for_imputing.csv')
-#     util.save_data_set(sfi, data_folder='./data_for_tests', file_name='sample_for_imputing.csv')
 def test__to_numeric():
     assert_to_numeric(po_body='PO00982', po_html='PO00982')
 
@@ -250,6 +241,14 @@ def test_impute_from_stream_index():
 
 
 def test_impute_from_similar_columns():
+    """Give a data set with this structure
+     attachment | HighestLayerProtocol | sale_order_id | sale_order_line_id | order_line_id | test_mix
+     --------------------------------------------------------------------------------------------------
+     'PO00978'
+     np.nan
+
+    :return: None
+    """
     data_set = pd.DataFrame({
         'attachment': ['PO00978', np.nan, 'PO00979', 'PO00980', 'PO00981', 'PO00978', np.nan, 'PO00981'],
         'HighestLayerProtocol': [np.nan, 'PO00979', np.nan, 'PO00980', 'PO00981', np.nan, 'PO00978', np.nan],
@@ -272,3 +271,40 @@ def test_impute_from_similar_columns():
     })
 
     assert_frame_equal(actual, expected)
+
+
+def test_impute_method_call():
+    data_set = pd.DataFrame(_data_for_impute_method_call())
+
+    actual = _impute_(sample_data=data_set, inputer_class=imp.ImputeFromRequestMethodCall())
+
+    sale_order_id = [np.nan, np.nan, np.nan, np.nan, np.nan, 375, np.nan, 375, np.nan]
+    sale_order_line_id = [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 399, np.nan, 399]
+    expected = pd.DataFrame(
+        _data_for_impute_method_call(sale_order_id=sale_order_id, sale_order_line_id=sale_order_line_id))
+
+    assert_frame_equal(actual, expected)
+
+
+def _data_for_impute_method_call(sale_order_id=None, sale_order_line_id=None):
+    request_method_call = ['version', 'server_version', np.nan, np.nan, np.nan, 'execute_kw', 'execute_kw', '375',
+                           '399']
+    frame_number = [99, 92, 100, 200, 220, 240, 318, 350, 400]
+    starting_frame_number = [np.nan, np.nan, '99', '92', np.nan, np.nan, np.nan, '240', '318']
+    sale_order_id = sale_order_id or [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+    sale_order_line_id = sale_order_line_id or [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+
+    sale_order = ['execute_kw', 'odoo01', '2', 'PWD1234', 'sale.order', 'create', 'partner_id', '1',
+                  'partner_invoice_id', '1', 'partner_shipping_id', '1']
+    sale_order_line = ['execute_kw', 'odoo01', '2', 'PWD1234', 'sale.order.line', 'create', 'order_id', '375',
+                       'product_id', '6', 'name', 'Office Lamp', 'product_uom_qty', '3', 'price_unit', '2']
+    file_data = [[], [], [], [], [], sale_order, sale_order_line, [375], [399]]
+
+    return {
+        'request_method_call': request_method_call,
+        'frame.number': frame_number,
+        'starting_frame_number': starting_frame_number,
+        'sale_order_id': sale_order_id,
+        'sale_order_line_id': sale_order_line_id,
+        'file_data': file_data
+    }

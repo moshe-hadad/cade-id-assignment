@@ -259,3 +259,8 @@ account_move_line_id,float64
 account_move_id,float64
 purchase_id,float64
 account_payment_id,float64
+id_id,float64
+0_id,float64
+display_name_id,float64
+account_journal_id,float64
+active_id,float64

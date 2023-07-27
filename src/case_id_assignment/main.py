@@ -33,21 +33,21 @@ def impute(isolated_data_set_engineered: pd.DataFrame, interleaved_data_set_engi
     if impute:
         columns = ['subject', 'origin', 'res_name', 'datas_fname']
 
-
         impute_pipeline = Pipeline(steps=[
             ('tableimputer', imputer.ImputeFromTable()),
             ('filedata_imputer', imputer.ImputeFromFileData()),
             ('html_imputer', imputer.ImputeFromHtml()),
             ('po_imputer', imputer.ImputePO(columns)),
             ('res_imputer', imputer.ImputeFromRes()),
+            ('requesr_method_imputer', imputer.ImputeFromRequestMethodCall()),
             ('similar_columns_imputer', imputer.ImputeFromSimilarColumns())])
 
         isolated_df_imputed = impute_pipeline.fit_transform(isolated_data_set_engineered)
         interleaved_df_imputed = impute_pipeline.fit_transform(interleaved_data_set_engineered)
 
-
-
-        stream_index_pipeline = Pipeline(steps=[(('stream_index_http_imputer', imputer.ImputeFromStreamIndexHTTP()))])
+        # The following imputes can be done only on the interleaved data sets
+        stream_index_pipeline = Pipeline(steps=[
+            ('stream_index_http_imputer', imputer.ImputeFromStreamIndexHTTP())])
         interleaved_df_imputed = stream_index_pipeline.fit_transform(interleaved_df_imputed)
 
         if save_results:
@@ -156,7 +156,7 @@ def pre_processing_data(isolated_data_set: pd.DataFrame, interleaved_data_set: p
 
 PRE_PROCESS = False
 FEATURE_ENGINEERING = False
-IMPUTING = True
+IMPUTING = False
 
 if __name__ == '__main__':
     # ---------------  Load data sets ---------------- #
