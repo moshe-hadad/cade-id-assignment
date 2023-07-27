@@ -1,6 +1,10 @@
 import itertools
 import markov_clustering as mc
+import matplotlib.pyplot as plt
 import networkx as nx
+import pandas as pd
+
+import case_id_assignment.utilities as util
 
 
 def _create_node_and_edge(record):
@@ -41,13 +45,17 @@ def cluster(data_set):
     graph = nx.Graph()
     graph.add_nodes_from(nodes)
     graph.add_edges_from(edges)
+    # nx.draw(graph)
+    # plt.show()
     matrix = nx.to_scipy_sparse_array(graph)
     # no_date_inflation = 1.40
-    no_date_inflation = 1.4
+    no_date_inflation = 1.1
     result = mc.run_mcl(matrix, inflation=no_date_inflation)  # run MCL with default parameters
     clusters_ids = mc.get_clusters(result)  # get clusters
-    clusters = [_ids_to_nodes(cluster, nodes) for cluster in clusters_ids]
 
+    clusters = [_ids_to_nodes(cluster, nodes) for cluster in clusters_ids]
+    data = {'clusters': clusters}
+    util.save_data_set(data_set=pd.DataFrame(data=data), data_folder='../../processed_data', file_name='clusters.csv')
     clusters_refined = [_values(cluster) for cluster in clusters]
 
     return clusters_refined

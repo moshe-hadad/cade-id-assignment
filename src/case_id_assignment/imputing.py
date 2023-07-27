@@ -312,12 +312,19 @@ class ImputeFromRequestMethodCall(Imputer):
         return self
 
 
-# class ImputeFromSimilarRows(BaseEstimator, TransformerMixin):
-#     def __init__(self, columns):
-#         self.columns = columns
-#
-#     def fit(self, X, y=None):
-#         return self
-#
-#     def transform(self, X, y=None, **fit_params):
-#         return X
+class ImputeFromSimilarRows(BaseEstimator, TransformerMixin):
+    def __init__(self, columns, excluded_columns=None):
+        self.columns = columns
+        self.excluded_columns = [] or excluded_columns
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None, **fit_params):
+        columns_to_exclude = set(self.excluded_columns)
+        columns_for_sync = [column for column in X.columns if column not in columns_to_exclude]
+        for column in tqdm(self.columns, desc='Impute from similar rows based on case id attributes'):
+            for value in X[column].unique():
+                filtered = X[X[column] == value]
+                X.update(filtered[columns_for_sync].ffill().bfill())
+        return X

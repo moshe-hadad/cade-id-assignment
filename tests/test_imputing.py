@@ -10,6 +10,14 @@ import case_id_assignment.utilities as util
 from . import testutils as tu
 from .testutils import expected_results
 
+REQUEST_METHOD_CALL = ['version', 'server_version', np.nan, np.nan, np.nan, 'execute_kw', 'execute_kw', '375',
+                       '399']
+FRAME_NUMBER = [99, 92, 100, 200, 220, 240, 318, 350, 400]
+STARTING_FRAME_NUMBER = [np.nan, np.nan, '99', '92', np.nan, np.nan, np.nan, '240', '318']
+SALE_ORDER_ID = [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+SALE_ORDER_LINE_ID = [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+EXCLUDED_COLUMN = [121, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 399, np.nan]
+
 
 def _input_sample_data():
     sample_data = tu.load_sample_data(file_name='sample_for_imputing.csv')
@@ -287,24 +295,50 @@ def test_impute_method_call():
 
 
 def _data_for_impute_method_call(sale_order_id=None, sale_order_line_id=None):
-    request_method_call = ['version', 'server_version', np.nan, np.nan, np.nan, 'execute_kw', 'execute_kw', '375',
-                           '399']
-    frame_number = [99, 92, 100, 200, 220, 240, 318, 350, 400]
-    starting_frame_number = [np.nan, np.nan, '99', '92', np.nan, np.nan, np.nan, '240', '318']
-    sale_order_id = sale_order_id or [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
-    sale_order_line_id = sale_order_line_id or [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
-
     sale_order = ['execute_kw', 'odoo01', '2', 'PWD1234', 'sale.order', 'create', 'partner_id', '1',
                   'partner_invoice_id', '1', 'partner_shipping_id', '1']
     sale_order_line = ['execute_kw', 'odoo01', '2', 'PWD1234', 'sale.order.line', 'create', 'order_id', '375',
                        'product_id', '6', 'name', 'Office Lamp', 'product_uom_qty', '3', 'price_unit', '2']
     file_data = [[], [], [], [], [], sale_order, sale_order_line, [375], [399]]
 
+    sale_order_id = sale_order_id or SALE_ORDER_ID
+    sale_order_line_id = sale_order_line_id or SALE_ORDER_LINE_ID
+
     return {
-        'request_method_call': request_method_call,
-        'frame.number': frame_number,
-        'starting_frame_number': starting_frame_number,
+        'request_method_call': REQUEST_METHOD_CALL,
+        'frame.number': FRAME_NUMBER,
+        'starting_frame_number': STARTING_FRAME_NUMBER,
         'sale_order_id': sale_order_id,
         'sale_order_line_id': sale_order_line_id,
         'file_data': file_data
     }
+
+
+def _data_for_similar_rows(starting_frame_number=None):
+    starting_frame_number = starting_frame_number or STARTING_FRAME_NUMBER
+    sale_order_id = [345, 345, 345, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+    sale_order_line_id = [np.nan, np.nan, np.nan, np.nan, np.nan, 399, 399, 399, np.nan]
+
+    return {
+        'frame.number': FRAME_NUMBER,
+        'starting_frame_number': starting_frame_number,
+        'excluded_column': EXCLUDED_COLUMN,
+        'sale_order_id': sale_order_id,
+        'sale_order_line_id': sale_order_line_id
+    }
+
+
+def test_imputing_from_similar_rows():
+    data_set = pd.DataFrame(_data_for_similar_rows())
+
+    actual = _impute_(sample_data=data_set, inputer_class=imp.ImputeFromSimilarRows(columns=['sale_order_id',
+                                                                                             'sale_order_line_id'],
+                                                                                    excluded_columns=[
+                                                                                        'excluded_column']))
+
+    starting_frame_number = ['99', '99', '99', '92', np.nan, '240', '240', '240', '318']
+
+    expected = pd.DataFrame(
+        _data_for_similar_rows(starting_frame_number=starting_frame_number))
+
+    assert_frame_equal(actual, expected)

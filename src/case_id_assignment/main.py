@@ -63,6 +63,27 @@ def impute(isolated_data_set_engineered: pd.DataFrame, interleaved_data_set_engi
     return isolated_df_imputed, interleaved_df_imputed
 
 
+def impute_based_on_row(data_set: pd.DataFrame, list_of_columns: list[str]):
+    """This function performs the imputing based on columns (features) which are correlated with the instance number
+    For each such column, we filter the data set based on its unique values.
+    Then we complete all other values for all columns in the filtered data set
+    The idea is that each value of a correlated feature, points to an instance id and thus all other values in the
+    filtered data set, are also related to the same instance
+
+    :param data_set: the data set to perform the imputation on
+    :param list_of_columns: list of instance correlated values
+    :return: imputed data set
+    """
+    impute_pipeline = Pipeline(steps=[
+        ('row_imputer', imputer.ImputeFromSimilarRows(columns=list_of_columns,
+                                                      excluded_columns=['real_case_id',
+                                                                        'request_method_call',
+                                                                        'starting_frame_number', 'file_data']))])
+
+    imputed_data_set = impute_pipeline.fit_transform(X=data_set)
+    return imputed_data_set
+
+
 def engineer_features(isolated_df_processed: pd.DataFrame, interleaved_df_processed: pd.DataFrame,
                       save_results: bool = False, feature_engineering: bool = True) -> tuple[
     pd.DataFrame, pd.DataFrame]:
@@ -183,6 +204,9 @@ if __name__ == '__main__':
     # Selecting features based on correlation
     list_of_features = selector.simple_correlation_selector(isolated_df_imputed, target_column='InstanceNumber',
                                                             threshold=0.90)
+
+    # impute rows based on instance correlated features
+    interleaved_df_imputed = impute_based_on_row(data_set=interleaved_df_imputed, list_of_columns=list_of_features)
 
     print(list_of_features)
     # # Impute data on the interleaved data set
