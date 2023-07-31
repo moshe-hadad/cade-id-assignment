@@ -1,4 +1,13 @@
-import os.path
+"""This is the main module of the project. The main method contains all the steps of the project
+1) Loading the data
+2) Pre processing
+3) Feature Engineering
+4) Feature Selection
+5) Data imputing
+6) Clustering
+7) Case id assignment
+8) Evaluation
+"""
 
 import numpy as np
 import pandas as pd
