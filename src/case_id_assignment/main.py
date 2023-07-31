@@ -72,7 +72,7 @@ def impute(interleaved_data_set_engineered: pd.DataFrame,
         ])
 
         interleaved_df_imputed = impute_pipeline.fit_transform(interleaved_data_set_engineered)
-        interleaved_df_imputed = _sync_data_types(data_set=interleaved_df_imputed)
+        # interleaved_df_imputed = _sync_data_types(data_set=interleaved_df_imputed)
 
         missing_after = util.missing_data_percentage(interleaved_data_set_engineered)
         print(f'Missing data percentage after imputation:{missing_after}')

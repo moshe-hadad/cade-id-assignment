@@ -1,6 +1,6 @@
 # Project Title
 
-Event to case correlation (case id assignment) in network traffic data
+Case ID to Activity Assignment, Under Interleaved Network Traffic Data
 
 ## Description
 
@@ -49,12 +49,13 @@ If the above flags are False, the program will load previously processes data fr
 perform the next steps.  
 
 ### Executing program
-Run the main module
+Run the main.ipynb notebook or run the main.py module.
 
 ### Project structure
 - data - Contains the original network traffic data. Isolated and Interleaved data sets  
 - data_for_tests - Contain small sample of data for tests
 - notebooks - Contain jupyter notebooks which were used for exploring and understanding the data
+  - main.ipynb - Contain the main steps to execute, same as main.py but with explenations.
 - process_data - Contains the data sets after each step of processing. 
   - benchmark.csv - benchmark containing the results of the original method
   - clusters.csv - the results of the last run of the clustering step
