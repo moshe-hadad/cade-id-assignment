@@ -225,7 +225,6 @@ credit_cash_basis,object
 balance_cash_basis,object
 company_currency_id,object
 ir_sequence_date_range_id,object
-multi,object
 payment_date,object
 payment_difference_handling,object
 payment_method_id,object
@@ -243,3 +242,16 @@ message_id_1,object
 message_id_2,object
 message_id_3,object
 message_id_4,object
+sale_order_line_id,float64
+purchase_requisition_line_id,float64
+purchase_requisition_id,float64
+ir_attachment_id,float64
+purchase_order_line_id,float64
+stock_move_id,float64
+stock_move_line_id,float64
+stock_quant_id,float64
+account_invoice_line_id,float64
+account_move_line_id,float64
+account_move_id,float64
+product_template_id,float64
+product_product_id,float64

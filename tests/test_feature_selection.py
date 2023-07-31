@@ -6,12 +6,26 @@ import case_id_assignment.feature_selection as selector
 
 def test_simple_correlation_selector():
     sample_data = util.load_data_set(file_path='../data_for_tests/sample_for_correlation.csv')
-    features = selector.simple_correlation_selector(data_set=sample_data, target_column='InstanceNumber',
-                                                    threshold=0.95)
+    actual = selector.simple_correlation_selector(data_set=sample_data, target_column='InstanceNumber',
+                                                  threshold=0.95, save_to_file=False)
 
-    actual = features
     expected = ['res_id', 'mail_followers_id', 'mail_message_id', 'order_id', 'sale_order_id', 'sale_order_line_id']
     assert actual == expected
+
+
+def test_select_by_unique_cover():
+    sample_data = util.load_data_set(file_path='../data_for_tests/sample_for_correlation.csv')
+    actual = selector.unique_cover(data_set=sample_data, target_column='InstanceNumber', save_to_file=False)
+
+    expected = ['order_id',
+                'mail_message_id',
+                'mail_followers_id',
+                'starting_frame_number',
+                'sale_order_id',
+                'sale_order_line_id',
+                'res_id']
+    assert len(actual) == len(expected)
+    assert set(actual) == set(expected)
 
 # def test_data_sets():
 #     actual = util.load_data_set('../processed_data/isolated_df_imputed.csv')

@@ -10,7 +10,6 @@ session_generalized,object
 HighestLayerProtocol,object
 MessageType_WithRole,object
 MessageType,object
-MessageAttributes,object
 query_type,object
 session_class,object
 filter_flag,object
@@ -166,7 +165,7 @@ scrapped,object
 to_refund,object
 move_id,object
 route_id,object
-purchase_order_id,object
+purchase_order_id,float64
 stock_picking_id,object
 reference,object
 product_uom_id,object
@@ -225,7 +224,6 @@ credit_cash_basis,object
 balance_cash_basis,object
 company_currency_id,object
 ir_sequence_date_range_id,object
-multi,object
 payment_date,object
 payment_difference_handling,object
 payment_method_id,object

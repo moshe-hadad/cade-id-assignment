@@ -14,53 +14,68 @@ import case_id_assignment.assignment as case_id_assigner
 import case_id_assignment.evaluation as evaluation
 
 
-def impute(isolated_data_set_engineered: pd.DataFrame, interleaved_data_set_engineered: pd.DataFrame,
+def _sync_data_types(data_set: pd.DataFrame):
+    dtypes = util.load_data_set(file_path='../../processed_data/dtypes_for_interleaved_df_imputed.csv')
+    for column, dtype in dtypes.items():
+        if column in data_set.columns:
+            data_set[column] = data_set[column].astype(dtype)
+    return data_set
+
+
+def impute(interleaved_data_set_engineered: pd.DataFrame,
            save_results: bool = False, impute: bool = True) -> tuple[pd.DataFrame, pd.DataFrame]:
     """This function perform the imputing stage on the given data sets. The basic method is hot deck method in which
     rows with similar values are imputed from one another. Or values are being completed by extracting them from other
     columns' values.
 
-    :param isolated_data_set_engineered: The isolated data set
     :param interleaved_data_set_engineered: The interleaved data set
     :param save_results: If ture, the resulted data sets will be saved to the processed_data folder.
     :param impute: If True, the imputing stage will be performed on the data sets. If False the function will try to
     load and return the imputed data sets from the processed_data folder.
-    :return: isolated data set  and interleaved data set after imputing
+    :return: interleaved data set after imputing
     """
     processed_data_folder = '../../processed_data'
-    isolated_df_imputed_name = 'isolated_df_imputed'
     interleaved_df_imputed_name = 'interleaved_df_imputed'
     if impute:
+        missing_before = util.missing_data_percentage(interleaved_data_set_engineered)
+        print(f'Missing data percentage before imputation:{missing_before}')
+
         columns = ['subject', 'origin', 'res_name', 'datas_fname']
+        cleaner = {'purchase_order_id': [1., 2.],
+                   'sale_order_id': [1., 2.],
+                   'purchase_requisition_line_id': [1., 2.],
+                   'purchase_requisition_id': [1., 2.],
+                   'sale_order_line_id': [1.],
+                   'account_invoice_id': [1.],
+                   'stock_move_line_id': [1.]}
 
         impute_pipeline = Pipeline(steps=[
-            ('tableimputer', imputer.ImputeFromTable()),
             ('filedata_imputer', imputer.ImputeFromFileData()),
             ('html_imputer', imputer.ImputeFromHtml()),
             ('po_imputer', imputer.ImputePO(columns)),
             ('res_imputer', imputer.ImputeFromRes()),
             ('requesr_method_imputer', imputer.ImputeFromRequestMethodCall()),
-            ('similar_columns_imputer', imputer.ImputeFromSimilarColumns())])
+            ('name_column_imputer', imputer.ImputeFromNameColumn()),
+            ('clean_values', features_eng.CleanValues(cleaner)),
+            ('similar_columns_imputer', imputer.ImputeFromSimilarColumns()),
+            ('stream_index_http_imputer', imputer.ImputeFromStreamIndexHTTP()),
+            ('stream_index_imputer', imputer.ImputeFromStreamIndex(window_size=5))
+        ])
 
-        isolated_df_imputed = impute_pipeline.fit_transform(isolated_data_set_engineered)
         interleaved_df_imputed = impute_pipeline.fit_transform(interleaved_data_set_engineered)
+        interleaved_df_imputed = _sync_data_types(data_set=interleaved_df_imputed)
 
-        # The following imputes can be done only on the interleaved data sets
-        stream_index_pipeline = Pipeline(steps=[
-            ('stream_index_http_imputer', imputer.ImputeFromStreamIndexHTTP())])
-        interleaved_df_imputed = stream_index_pipeline.fit_transform(interleaved_df_imputed)
+        missing_after = util.missing_data_percentage(interleaved_data_set_engineered)
+        print(f'Missing data percentage after imputation:{missing_after}')
 
         if save_results:
-            util.save_data_set(data_set=isolated_df_imputed, data_folder='../../processed_data',
-                               file_name=isolated_df_imputed_name)
             util.save_data_set(data_set=interleaved_df_imputed, data_folder='../../processed_data',
                                file_name=interleaved_df_imputed_name)
     else:
-        isolated_df_imputed = util.load_data_set(file_path=f'{processed_data_folder}/{isolated_df_imputed_name}')
         interleaved_df_imputed = util.load_data_set(
             file_path=f'{processed_data_folder}/{interleaved_df_imputed_name}')
 
-    return isolated_df_imputed, interleaved_df_imputed
+    return interleaved_df_imputed
 
 
 def impute_based_on_row(data_set: pd.DataFrame, list_of_columns: list[str]):
@@ -98,12 +113,19 @@ def engineer_features(isolated_df_processed: pd.DataFrame, interleaved_df_proces
     will try to load and return a previously featured engineered data set from the processed_data folder
     :return: isolated data set  and interleaved data set after feature engineering
     """
+    cleaner = {'purchase_order_id': [1, 2],
+               'sale_order_id': [1, 2],
+               'purchase_requisition_line_id': [1, 2],
+               'purchase_requisition_id': [1, 2],
+               'sale_order_line_id': [1]}
     processed_data_folder = '../../processed_data'
     isolated_df_engineered_name = 'isolated_df_engineered'
     interleaved_df_engineered_name = 'interleaved_df_engineered'
     if feature_engineering:
         pipeline = Pipeline(steps=[
-            ('feature_eng', features_eng.EngineerFeatures())
+            ('feature_eng', features_eng.EngineerFeatures()),
+            ('features_from_table', imputer.CreateFeaturesFromTableColumn()),
+            ('clean_values', features_eng.CleanValues(cleaner))
         ])
         isolated_df_engineered = pipeline.fit_transform(isolated_df_processed)
         interleaved_df_engineered = pipeline.fit_transform(interleaved_df_processed)
@@ -180,48 +202,57 @@ FEATURE_ENGINEERING = False
 IMPUTING = False
 
 if __name__ == '__main__':
-    # ---------------  Load data sets ---------------- #
+    # ----------------------------------------  Load data sets ------------------------------------------------------ #
     data_folder = '../../data'
     isolated_data_set = util.load_data_set(file_path=f'{data_folder}/ptp_isolated_data.csv')
     interleaved_data_set = util.load_data_set(file_path=f'{data_folder}/ptp_interleaved_data.csv')
 
-    # ---- Pre-process the data by breaking down SQL queries and message attributes to add columns --- #
+    # ------------------------------------------ Pre-processing  ---------------------------------------------------- #
     isolated_df_processed, interleaved_df_processed = pre_processing_data(isolated_data_set, interleaved_data_set,
                                                                           save_results=True,
                                                                           pre_process=PRE_PROCESS)
 
+    # ---------------------------------------  Feature Engineering -------------------------------------------------- #
+    del isolated_df_processed['multi']
+    del interleaved_df_processed['multi']
     # ---- Feature Engineering, manipulate features, change format, process value etc --- #
     isolated_df_engineered, interleaved_df_engineered = engineer_features(isolated_df_processed,
                                                                           interleaved_df_processed,
                                                                           save_results=True,
                                                                           feature_engineering=FEATURE_ENGINEERING)
 
-    # ---- Impute Data, complete missing values --- #
-    isolated_df_imputed, interleaved_df_imputed = impute(isolated_df_engineered, interleaved_df_engineered,
-                                                         save_results=True,
-                                                         impute=IMPUTING)
-
-    # Selecting features based on correlation
-    list_of_features = selector.simple_correlation_selector(isolated_df_imputed, target_column='InstanceNumber',
+    # ---------------------------------------- Feature Selection ------------------------------------------------------#
+    # Selecting features based on uniquely covering instance number column
+    list_of_features = selector.simple_correlation_selector(isolated_df_engineered, target_column='InstanceNumber',
                                                             threshold=0.90)
 
-    # impute rows based on instance correlated features
-    interleaved_df_imputed = impute_based_on_row(data_set=interleaved_df_imputed, list_of_columns=list_of_features)
+    print(f'Selected Features:{list_of_features}')
 
-    print(list_of_features)
-    # # Impute data on the interleaved data set
-
+    # ---------------------------------- Impute Data, complete missing values ---------------------------------------- #
+    del interleaved_df_engineered['MessageAttributes']
+    interleaved_df_imputed = impute(interleaved_df_engineered, save_results=True, impute=IMPUTING)
+    # Reload interleaved_df_imputed so dtypes will be synced
+    interleaved_df_imputed = util.load_data_set(file_path='../../processed_data/interleaved_df_imputed.csv')
     filtered_df = interleaved_df_imputed[list_of_features]
-    # Cluster values into groups
-    clusters = clustering.cluster(data_set=filtered_df)
+
+    # ------------------------------------- Cluster values into groups ------------------------------------------------#
+    clusters = clustering.greedy_modularity_communities(data_set=filtered_df)
+    # clusters = clustering.girvan_newman(data_set=filtered_df)
+    # clusters = clustering.louvain_communities(data_set=filtered_df)
+
     print(f'Number of clusters : {len(clusters)}')
 
-    # Assign case id
+    # ------------------------------------------- Assign case id ------------------------------------------------------#
     results_data_set = case_id_assigner.assign_case_id(data_set=interleaved_df_imputed, attributes=list_of_features,
                                                        clusters=clusters)
     results_data_set = case_id_assigner.assign_case_id_to_activity_action(data_set=interleaved_df_imputed)
     util.save_data_set(data_set=results_data_set, data_folder='../../processed_data', file_name='final_results.csv')
 
-    # Evaluate the case id assignment
-    result = evaluation.evaluate_case_id_accuracy(data_set=results_data_set)
-    print(f'Assignment evaluation : {result}')
+    # --------------------------------------- Evaluate the case id assignment------------------------------------------#
+    rand_score, homogeneity, completeness, v_measure = evaluation.evaluate_case_id_accuracy(
+        data_set=results_data_set)
+
+    print(f'Rand Score : {rand_score}')
+    print(f'Homogeneity : {homogeneity}')
+    print(f'Completeness : {completeness}')
+    print(f'V_measure : {v_measure}')

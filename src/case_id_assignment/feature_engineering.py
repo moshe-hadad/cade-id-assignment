@@ -110,3 +110,17 @@ class EngineerFeatures(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):
         X = X.join(self.message_id_columns)
         return X
+
+
+class CleanValues(BaseEstimator, TransformerMixin):
+    def __init__(self, values_in_columns_to_clean: dict[str:list[object]]):
+        self.values_in_columns_to_clean = values_in_columns_to_clean
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        for column, values in self.values_in_columns_to_clean.items():
+            for value in values:
+                X[column] = X[column].replace(value, np.nan)
+        return X

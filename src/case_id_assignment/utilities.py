@@ -159,6 +159,7 @@ def columns_with_similar_values(data_set: pd.DataFrame, skip_columns: set[str]) 
     columns = [column_list for column_list in columns_collection.values() if len(column_list) > 1]
     return columns
 
+
 # shared_columns = list(set(isolated_df_engineered.columns).intersection(set(list_of_features)))
 # isolated_missing_percentage_before = util.missing_data_percentage(isolated_df_engineered[shared_columns])
 # interleaved_missing_percentage_before = util.missing_data_percentage(interleaved_df_engineered[shared_columns])
@@ -171,3 +172,14 @@ def columns_with_similar_values(data_set: pd.DataFrame, skip_columns: set[str]) 
 # print(
 #     f'Interleaved :before:{interleaved_missing_percentage_before}, after:{interleaved_missing_percentage_after}')
 # print('*' * 50)
+def extract_columns(data_frame_to_roll_on, start, end, columns):
+    if columns:
+        return data_frame_to_roll_on[columns].iloc[start:end]
+
+    return data_frame_to_roll_on.iloc[start:end]
+
+
+def rolling_window(data_frame_to_roll_on, window, columns=None):
+    length = len(data_frame_to_roll_on)
+    return [extract_columns(data_frame_to_roll_on, start, end, columns) for start, end in
+            zip(range(length), range(window, length + 1))]

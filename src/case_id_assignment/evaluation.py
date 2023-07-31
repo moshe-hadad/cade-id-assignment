@@ -19,33 +19,12 @@ def evaluate_case_id_accuracy(data_set):
     predicted_case_id_column = 'CaseIDVoting'
     case_id_mapping_column = 'CaseIDMapping'
     data_set[case_id_mapping_column] = data_set[real_case_id_column].map(util.case_id_mapping())
-    # case_id_data_set = data_set[data_set[real_case_id_column] != '']
 
     filtered = data_set[data_set['real_activity_action'] != 'NoAction']
     labels_true = _non_null_value(data_set=filtered, column=case_id_mapping_column)
     labels_pred = _non_null_value(data_set=filtered, column=predicted_case_id_column)
 
-    result = metrics.normalized_mutual_info_score(labels_true, labels_pred)
-    return result
-    #
-    # start_case_id_accuracy, end_case_id_accuracy = report_clustering_accuracy(case_id_data_set,
-    #                                                                           truth_column=case_id_mapping_column,
-    #                                                                           predicted_column=predicted_case_id_column)
-    # return start_case_id_accuracy, end_case_id_accuracy
+    rand_score = metrics.rand_score(labels_true, labels_pred)
+    homogeneity, completeness, v_measure = metrics.homogeneity_completeness_v_measure(labels_true, labels_pred)
 
-
-def report_clustering_accuracy(case_id_data_set, truth_column, predicted_column):
-    start_case_id_data_set = case_id_data_set[case_id_data_set['real_single_activity_action'] == 'Activity Start']
-    start_case_id_accuracy = _calculate_accuracy(start_case_id_data_set, true_column=truth_column,
-                                                 predicted_column=predicted_column)
-    end_case_id_data_set = case_id_data_set[case_id_data_set['real_single_activity_action'] == 'Activity End']
-    end_case_id_accuracy = _calculate_accuracy(end_case_id_data_set, true_column=truth_column,
-                                               predicted_column=predicted_column)
-
-    return start_case_id_accuracy, end_case_id_accuracy
-
-
-def _calculate_accuracy(data_set, true_column, predicted_column):
-    equality_test = np.where(data_set[true_column] == data_set[predicted_column], 1, 0)
-    accuracy = sum(equality_test) / len(equality_test)
-    return accuracy
+    return rand_score, homogeneity, completeness, v_measure

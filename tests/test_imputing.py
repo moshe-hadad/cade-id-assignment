@@ -28,7 +28,7 @@ def _input_sample_data():
     return results
 
 
-def _impute_(sample_data=None, inputer_class=imp.ImputeFromTable()):
+def _impute_(sample_data=None, inputer_class=imp.CreateFeaturesFromTableColumn()):
     sample_data = sample_data if isinstance(sample_data, pd.DataFrame) else tu.load_sample_data(
         file_name='sample_for_imputing.csv')
     pipeline = Pipeline(steps=[
@@ -230,7 +230,7 @@ def test__clean_po_str():
     assert actual == '00152'
 
 
-def test_impute_from_stream_index():
+def test_impute_from_stream_index_http():
     data_set = pd.DataFrame({
         'stream_index': [1, 1, 2, 3, 4, 3, 3, 8, 8, 8],
         'HighestLayerProtocol': ['http', 'http', 'pgsql', 'http', 'http', 'http', 'http', 'pgsql', 'pgsql', 'pgsql'],
@@ -244,6 +244,24 @@ def test_impute_from_stream_index():
         'HighestLayerProtocol': ['http', 'http', 'pgsql', 'http', 'http', 'http', 'http', 'pgsql', 'pgsql', 'pgsql'],
         'sale_order_line_id': [375, 375, np.nan, 376, np.nan, 376, 376, np.nan, np.nan, 399],
         'order_line_id': [378, 378, np.nan, 376, 376, 376, 376, np.nan, np.nan, 566],
+    })
+    assert_frame_equal(actual, expected)
+
+
+def test_impute_from_stream_index_pgsql():
+    data_set = pd.DataFrame({
+        'stream_index':         [1, 1, 1, 3, 4, 3, 3, 8, 8, 8],
+        'HighestLayerProtocol': ['http', 'pgsql', 'pgsql', 'http', 'http', 'pgsql', 'pgsql', 'pgsql', 'http', 'http'],
+        'sale_order_line_id':   [np.nan, 375, np.nan, 398, np.nan, np.nan, 398, np.nan, 399, 399],
+        'order_line_id':        [np.nan, 378, np.nan, np.nan, 376, 376, np.nan, np.nan, 566, 566],
+    })
+    actual = _impute_(sample_data=data_set, inputer_class=imp.ImputeFromStreamIndex(3))
+
+    expected = pd.DataFrame({
+        'stream_index':        [1, 1, 1, 3, 4, 3, 3, 8, 8, 8],
+        'HighestLayerProtocol':['http', 'pgsql', 'pgsql', 'http', 'http', 'pgsql', 'pgsql', 'pgsql', 'http', 'http'],
+        'sale_order_line_id':  [375., 375., 375., 398., np.nan, 398., 398., 399., 399., 399.],
+        'order_line_id':       [378., 378., 378., 376., 376., 376., 376.,566., 566., 566.],
     })
     assert_frame_equal(actual, expected)
 
@@ -340,5 +358,30 @@ def test_imputing_from_similar_rows():
 
     expected = pd.DataFrame(
         _data_for_similar_rows(starting_frame_number=starting_frame_number))
+
+    assert_frame_equal(actual, expected)
+
+
+def test_imputing_from_file_data_write():
+    sample_data = tu.load_sample_data(file_name='interleaved_for_imputing_2.csv')
+    results = _impute_(sample_data=sample_data, inputer_class=imp.ImputeFromFileData())
+
+    indices = [773]
+    data = {'purchase_requisition_id': [338.]}
+
+    actual = results.loc[indices, list(data.keys())]
+    expected = expected_results(data, indices)
+
+    assert_frame_equal(actual, expected)
+
+def test_impute_from_name_column():
+    sample_data = tu.load_sample_data(file_name='interleaved_for_imputing_2.csv')
+    results = _impute_(sample_data=sample_data, inputer_class=imp.ImputeFromNameColumn())
+
+    indices = [774]
+    data = {'sale_order_id': [379.]}
+
+    actual = results.loc[indices, list(data.keys())]
+    expected = expected_results(data, indices)
 
     assert_frame_equal(actual, expected)

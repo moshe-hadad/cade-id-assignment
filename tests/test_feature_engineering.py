@@ -95,3 +95,22 @@ def test__merge_dict():
                 'user_id': [np.nan, 10, 12, 18]
                 }
     assert actual == expected
+
+
+def test_clean_values():
+    sample_data = pd.DataFrame(data={'sale_order_id': [1, 2, 567, 454, 345, 66, 777, 76, 2, 1],
+                                     'order_id': ['1', '2', '567', '454', '345', '66', '777', '76', '2', '1'],
+                                     'parent_id': [1, 2, 567, 454, 345, 66, 777, 76, 2, 1]})
+
+    cleaner = {'sale_order_id': [1, 2],
+               'order_id': ['1', '2']}
+    pipeline = Pipeline(steps=[
+        ('clean', features_eng.CleanValues(cleaner))
+    ])
+    actual = pipeline.fit_transform(sample_data)
+
+    expected = pd.DataFrame(data={'sale_order_id': [np.nan, np.nan, 567, 454, 345, 66, 777, 76, np.nan, np.nan],
+                                  'order_id': [np.nan, np.nan, '567', '454', '345', '66', '777', '76', np.nan, np.nan],
+                                  'parent_id': [1, 2, 567, 454, 345, 66, 777, 76, 2, 1]})
+
+    assert_frame_equal(actual, expected)

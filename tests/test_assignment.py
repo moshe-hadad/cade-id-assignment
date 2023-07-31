@@ -23,10 +23,12 @@ def test__enumerate_clusters():
 
 
 def test_assign_case_id():
-    clusters = [[399, 980, 400, 981, 402, 978],
-                [401, 979, 983, 982, 403, 984],
-                [404, 985, 405, 986]
-                ]
+    clusters = [[('sale_order_line_id', 399), ('purchase_order_id', 980), ('sale_order_line_id', 400),
+                 ('purchase_order_id', 981), ('sale_order_line_id', 402), ('purchase_order_id', 978)],
+                [('sale_order_line_id', 401), ('purchase_order_id', 979), ('purchase_order_id', 983),
+                 ('purchase_order_id', 982), ('sale_order_line_id', 403), ('purchase_order_id', 984)],
+                [('sale_order_line_id', 404), ('purchase_order_id', 985), ('sale_order_line_id', 405),
+                 ('purchase_order_id', 986)]]
 
     data_set = pd.DataFrame({
         'sale_order_line_id': [399, 404, 400, 399, 401, 402, 401, 399, 403, 400, 403, 403, 405],

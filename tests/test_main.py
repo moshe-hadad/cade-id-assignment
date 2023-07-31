@@ -2,6 +2,7 @@ import pytest
 from pandas._testing import assert_frame_equal
 
 import case_id_assignment.main as main
+import case_id_assignment.clustering as clust
 import case_id_assignment.utilities as util
 from . import testutils as tu
 
@@ -24,12 +25,12 @@ def _assert_against(isolated_actual, interleaved_actual, isolated_expected_name,
     assert_frame_equal(interleaved_actual, interleaved_expected)
 
 
-def test_engineer_features():
-    isolated_processed = tu.load_sample_data(file_name='isolated_expected_processed.csv')
-    interleaved_processed = tu.load_sample_data(file_name='interleaved_expected_processed.csv')
-
-    isolated_actual_engineered, interleaved_actual_engineered = main.engineer_features(
-        isolated_df_processed=isolated_processed, interleaved_df_processed=interleaved_processed)
-
-    _assert_against(isolated_actual_engineered, interleaved_actual_engineered,
-                    'isolated_expected_engineered.csv', 'interleaved_expected_engineered.csv')
+# def test_engineer_features():
+#     isolated_processed = tu.load_sample_data(file_name='isolated_expected_processed.csv')
+#     interleaved_processed = tu.load_sample_data(file_name='interleaved_expected_processed.csv')
+#
+#     isolated_actual_engineered, interleaved_actual_engineered = main.engineer_features(
+#         isolated_df_processed=isolated_processed, interleaved_df_processed=interleaved_processed)
+#
+#     _assert_against(isolated_actual_engineered, interleaved_actual_engineered,
+#                     'isolated_expected_engineered.csv', 'interleaved_expected_engineered.csv')

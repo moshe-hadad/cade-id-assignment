@@ -17,7 +17,7 @@ def _enumerate_clusters(clusters: list[list[object]]) -> dict[object, int]:
 def case_id_assignment(attributes, clusters_enum):
     def assign(row):
         values = row[attributes]
-        case_ids = {assignment for value in values for assignment in clusters_enum.get(value, '')}
+        case_ids = {assignment for value in values.items() for assignment in clusters_enum.get(value, '')}
 
         return str(case_ids)
 

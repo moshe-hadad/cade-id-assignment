@@ -18,6 +18,13 @@ def _extract_key_value(items):
     return dict(zip(it, it))
 
 
+def _extract_write_key_value(items):
+    key = items[4].replace('.', '_')
+    key = f'{key}_id'
+    value = items[6]
+    return {key: float(value)}
+
+
 def _extract_for_button_confirmed(items):
     id = items[-1]
     return {'res_id': id, 'record_name': f'PO00{id}', 'datas_fname': f'PO_PO00{id}.pdf', 'res_name': f'PO00{id}',
@@ -33,7 +40,8 @@ PARSINGS = defaultdict(_extract_key_value,
                         'purchase.order_button_confirm': _extract_for_button_confirmed,
                         'purchase.requisition_create': _extract_key_value,
                         'purchase.requisition.line_create': _extract_key_value,
-                        'purchase.order_create': _extract_key_value, })
+                        'purchase.order_create': _extract_key_value,
+                        'purchase.requisition_write': _extract_write_key_value})
 
 
 def parse_null(file_data):
@@ -143,7 +151,7 @@ def parse_table_column(row):
     return {f'{table}_id': float(id)}
 
 
-class ImputeFromTable(Imputer):
+class CreateFeaturesFromTableColumn(Imputer):
     def __init__(self):
         super().__init__(parse_table_column)
 
@@ -228,6 +236,25 @@ class ImputeFromRes(Imputer):
         super().__init__(extract_po_from_res_id)
 
 
+def extract_from_name_column(row):
+    tables, name = row[['tables', 'name']]
+    if util.is_nan(tables) or util.is_nan(name):
+        return None
+    tables = eval(tables) if isinstance(tables, str) else tables
+    table_name = util.first_item(tables)
+    if table_name != 'purchase_requisition' or '_' not in name:
+        return None
+    value = name.split('_')[-1]
+    if not value.isnumeric():
+        return None
+    return {'sale_order_id': float(value)}
+
+
+class ImputeFromNameColumn(Imputer):
+    def __init__(self):
+        super().__init__(extract_from_name_column)
+
+
 class ImputeFromStreamIndexHTTP(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
@@ -240,10 +267,35 @@ class ImputeFromStreamIndexHTTP(BaseEstimator, TransformerMixin):
     def _sync_on_stream_index(self, data_set, filtered_ds):
         excluded = {'file_data', 'stream_index'}
         columns = list(column for column in data_set.columns if column not in excluded)
-        for stream_index in filtered_ds['stream_index'].unique():
+        for stream_index in tqdm(filtered_ds['stream_index'].unique(), desc='Impute from stream index for HTTP'):
             filtered = filtered_ds[filtered_ds['stream_index'] == stream_index]
             data_set.update(filtered[columns].ffill().bfill())
         return data_set
+
+
+def sync_values_on_rolling_window(new_ds, rolling_window):
+    excluded = {'file_data', 'stream_index'}
+    columns = list(column for column in new_ds.columns if column not in excluded)
+
+    for window in tqdm(rolling_window, desc='Impute from stream index'):
+        for stream_index in window['stream_index'].unique():
+            filtered = window[window['stream_index'] == stream_index]
+            new_ds.update(filtered[columns].ffill().bfill())
+
+    return new_ds
+
+
+class ImputeFromStreamIndex(BaseEstimator, TransformerMixin):
+    def __init__(self, window_size):
+        self.window_size = window_size
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None, **fit_params):
+        rolling_window = util.rolling_window(X, self.window_size)
+        X = sync_values_on_rolling_window(X, rolling_window)
+        return X
 
 
 class ImputeFromSimilarColumns(BaseEstimator, TransformerMixin):
@@ -260,7 +312,7 @@ class ImputeFromSimilarColumns(BaseEstimator, TransformerMixin):
         return self._fill_missing_values(data_set=X)
 
     def _fill_missing_values(self, data_set):
-        for collection_of_columns in self.list_of_columns:
+        for collection_of_columns in tqdm(self.list_of_columns, desc='Impute from similart values'):
             for first_column, second_column in itertools.permutations(collection_of_columns, 2):
                 data_set[first_column] = data_set[first_column].fillna(data_set[second_column])
 
@@ -285,6 +337,13 @@ def _extreact_from_request_method(data_set):
             attribute_column = data_set[data_set['frame.number'] == int(starting_frame_number)]['attribute_name']
             attribute_name = None if attribute_column.empty else attribute_column.iloc[0]
             value = request_method_call
+        if attribute_name:
+            # If there is already a value for the attributes we don't need to impute
+            if attribute_name not in row:
+                return None
+            cell = row[attribute_name]
+            if not util.is_nan(cell):
+                return None
 
         return {attribute_name: float(value)} if attribute_name and value else None
 

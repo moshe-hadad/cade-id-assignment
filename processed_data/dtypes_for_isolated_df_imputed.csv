@@ -162,7 +162,7 @@ scrapped,object
 to_refund,object
 move_id,object
 route_id,object
-purchase_order_id,object
+purchase_order_id,float64
 stock_picking_id,object
 reference,object
 product_uom_id,object
